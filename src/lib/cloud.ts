@@ -13,7 +13,7 @@ let channel: RealtimeChannel | null = null
 
 interface MeResponse {
   userId: string; email: string; role: Session['role']; clientId?: string | null; platformOwner: boolean
-  org: { id: string; slug: string; name: string; plan: Session['plan']; status: Session['status']; comped: boolean; grace_until?: string | null; current_period_end?: string | null; custom_domain?: string | null; settings: Partial<Company>; integrations: Record<string, IntegrationState> }
+  org: { id: string; slug: string; name: string; plan: Session['plan']; status: Session['status']; comped: boolean; grace_until?: string | null; current_period_end?: string | null; custom_domain?: string | null; license?: 'subscription' | 'lifetime'; handoff_by?: string | null; settings: Partial<Company>; integrations: Record<string, IntegrationState> }
 }
 
 export type BootResult = { ok: true; session: Session } | { ok: false; reason: 'signed_out' | 'no_workspace' | 'error'; message?: string }
@@ -26,7 +26,7 @@ export async function bootstrap(): Promise<BootResult> {
   if (!r.ok || !r.data) return { ok: false, reason: r.error?.includes('No workspace') ? 'no_workspace' : 'error', message: r.error }
   const me = r.data
   const o = me.org
-  const session: Session = { orgId: o.id, slug: o.slug, plan: o.plan, status: o.status, comped: o.comped, graceUntil: o.grace_until, currentPeriodEnd: o.current_period_end, customDomain: o.custom_domain, role: me.role, clientId: me.clientId, email: me.email, platformOwner: me.platformOwner }
+  const session: Session = { orgId: o.id, slug: o.slug, plan: o.plan, status: o.status, comped: o.comped, graceUntil: o.grace_until, currentPeriodEnd: o.current_period_end, customDomain: o.custom_domain, license: o.license, handoffBy: o.handoff_by, role: me.role, clientId: me.clientId, email: me.email, platformOwner: me.platformOwner }
 
   // Load every record this user may see (RLS filters by role / client)
   const cols = emptyCollections() as unknown as Record<string, { id: string }[]>
@@ -67,7 +67,7 @@ export async function bootstrap(): Promise<BootResult> {
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orgs', filter: `id=eq.${o.id}` }, (p) => {
       const n = p.new as MeResponse['org']
       const cur = useStore.getState().session
-      if (cur) useStore.setState({ session: { ...cur, plan: n.plan, status: n.status, comped: n.comped, graceUntil: n.grace_until, customDomain: n.custom_domain } })
+      if (cur) useStore.setState({ session: { ...cur, plan: n.plan, status: n.status, comped: n.comped, graceUntil: n.grace_until, customDomain: n.custom_domain, license: n.license, handoffBy: n.handoff_by } })
     })
     .subscribe()
 

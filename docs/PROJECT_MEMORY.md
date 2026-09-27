@@ -5,7 +5,7 @@ This file is the single source of truth for **what was asked, what was decided a
 - **Owner:** Crystal (crystallynncreates)
 - **Repo:** `github.com/crystallynncreates/omni-totalstack-msp`
 - **Started:** 2026-09-27
-- **Current version:** 1.1.0 (multi-company SaaS)
+- **Current version:** 1.2.0 (multi-company SaaS; Enterprise = lifetime standalone)
 
 ## 1. Vision
 
@@ -58,7 +58,7 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 | Step 5: each MSP's own public pages & domain | `/m/<slug>`, wildcard subdomain, custom domain (Business+) via Admin → Website & domain (+ Vercel API) |
 | Step 6: invite team & clients | `pages/Team.tsx`, `api/_handlers/invites.ts`, `pages/AcceptInvite.tsx`; client users land in the branded portal |
 
-Pricing (editable in `shared/plans.ts`): Free Forever $0 (3 clients / 50 devices / 1 seat), Unlimited $99 (2 seats), Business $249 (10 seats, payroll, QBO, AI, QBR, custom domain), Enterprise $599 (unlimited). Enterprise was "custom" before; it's now a $599 self-serve price so it can be bought online. `FREE_PLAN_ENABLED=false` makes every plan paid.
+Pricing (editable in `shared/plans.ts`, set by Crystal 2026-09-27): **no free plan**. Unlimited $99/mo (2 seats), Business $249/mo (10 seats, payroll, QBO, AI, QBR, custom domain), **Enterprise $4,500 one-time, forever**. The buyer pays for their own domain and gets a standalone copy that is **disconnected from the platform** (`docs/STANDALONE.md`, `scripts/import-workspace.mjs`, `STANDALONE=true` mode). The hosted workspace stays on for a 30-day handoff window, then it's disconnected. Crystal's own account stays complimentary on the platform.
 
 Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, suspension, grace period, plan limits, seat limits and billing-column protection were all tested with 8 scenarios, and all passed.
 
@@ -92,6 +92,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-27, v1.2.0:** Removed the Free Forever plan. Enterprise is now a $4,500 one-time lifetime license: one-time Stripe checkout, cancels any subscription, 30-day handoff, then disconnected; standalone mode, workspace export/import, Owner Console handoff controls.
 
 - **2026-09-27, v1.1.0:** Multi-company SaaS: MSP-facing sales site, self-serve signup with Stripe subscriptions, automatic rollout on payment, per-MSP branded website, portal and custom domain, 7-day grace then lockout on non-payment, plan limits, team and client invites, per-MSP integrations and cron, complimentary owner account with Owner Console, Supabase realtime sync, new multi-tenant schema with RLS.
 

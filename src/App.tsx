@@ -79,15 +79,16 @@ export default function App() {
   }, [])
   useEffect(() => { setLimitHandler((m) => toast(m, 'warn')); onWriteError((m) => toast(m, 'bad')) }, [])
   const host = tenantHost()
+  const standalone = (import.meta.env.VITE_STANDALONE_SLUG as string) || ''
   if (booting) return <Loading />
 
   return (
     <Router>
       <Suspense fallback={<Loading />}>
         <Routes>
-          {host ? <Route path="/*" element={<TenantSite host={host} />} /> : <Route path="/" element={<OmniHome />} />}
+          {standalone ? <Route path="/*" element={<TenantSite standaloneSlug={standalone} />} /> : host ? <Route path="/*" element={<TenantSite host={host} />} /> : <Route path="/" element={<OmniHome />} />}
           <Route path="/platform" element={<Navigate to="/#pricing" replace />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={standalone ? <Navigate to="/login" replace /> : <Signup />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/login" element={<Login />} />
@@ -121,7 +122,7 @@ export default function App() {
             <Route path="team" element={<Team />} />
             <Route path="owner" element={<OwnerConsole />} />
           </Route>
-          {!host && <Route path="*" element={<Navigate to="/" />} />}
+          {!host && !standalone && <Route path="*" element={<Navigate to="/" />} />}
         </Routes>
       </Suspense>
     </Router>

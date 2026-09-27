@@ -219,6 +219,7 @@ export const scans: T.DiscoveryScan[] = [
 ]
 
 export const releases = [
+  { version: '1.2.0', date: dd(0), title: 'New plans', items: ['Plans are now Unlimited ($99/mo), Business ($249/mo) and Enterprise ($4,500 one-time)', 'Enterprise owners get their own standalone copy on their own domain, disconnected from Omni', 'Download all your data any time from Plan & Billing'], tourTargets: ['nav-billing'] },
   { version: '1.1.0', date: dd(0), title: 'Omni goes multi-company', items: ['Every MSP gets its own branded workspace, website and client portal', 'Plan & Billing: upgrade, downgrade and update your card (Stripe)', 'Team & Client Logins: invite technicians and give clients portal access', 'Website & domain: your own address or custom domain (Business+)', 'Workspaces pause automatically 7 days after a failed payment and reactivate the moment you pay'], tourTargets: ['nav-billing', 'nav-team', 'nav-admin'] },
   { version: '1.0.0', date: dd(0), title: 'Omni TotalStack MSP launch', items: ['Business Suite: clients, documents, proposals (3 options), RFS PDFs', 'Management Hub: sites, outages, contracts with red expiry alerts', '15-day patch soak policy + weekly client update emails', 'Network discovery agent + import', 'Finance: QuickBooks panel, payroll, drag-and-drop invoice builder, payments, non-payment notices', 'Landing page with lead capture, AI voice calls and booking'], tourTargets: ['nav-clients', 'nav-proposals', 'nav-patching', 'nav-finance'] },
 ]

@@ -14,4 +14,4 @@
 ## v2
 - Marketplace activation for the remaining 100+ adapters.
 - White-label client portal per MSP (custom domain).
-- SaaS billing for Omni tiers (Stripe Billing): Free Forever, Unlimited, Business, Enterprise.
+- Automate Enterprise standalone provisioning (Vercel + Supabase APIs) instead of the manual checklist.

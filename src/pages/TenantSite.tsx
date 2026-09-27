@@ -15,26 +15,27 @@ import Portal from './Portal'
 
 interface PublicTenant { slug: string; live: boolean; settings: Partial<Company> }
 
-export function useTenant(slug?: string, host?: string) {
+export function useTenant(slug?: string, host?: string, root = false) {
+  const atRoot = !!host || root
   const localCompany = useStore((s) => s.company)
   const [state, setState] = useState<{ loading: boolean; brand?: Brand; offline?: boolean; missing?: boolean }>({ loading: true })
   useEffect(() => {
     const isDemo = !cloudEnabled || slug === 'demo'
-    if (isDemo) { setState({ loading: false, brand: { company: localCompany, slug: 'demo', base: host ? '' : '/m/demo', demo: true } }); return }
+    if (isDemo) { setState({ loading: false, brand: { company: localCompany, slug: 'demo', base: atRoot ? '' : '/m/demo', demo: true } }); return }
     let cancelled = false
     api<PublicTenant>(`tenant/public?${slug ? `slug=${encodeURIComponent(slug)}` : `host=${encodeURIComponent(host!)}`}`).then((r) => {
       if (cancelled) return
       if (!r.ok || !r.data) return setState({ loading: false, missing: true })
-      if (!r.data.live) return setState({ loading: false, offline: true, brand: { company: { ...defaultCompany, ...r.data.settings }, slug: r.data.slug, base: host ? '' : `/m/${r.data.slug}`, demo: false } })
-      setState({ loading: false, brand: { company: { ...defaultCompany, ...r.data.settings } as Company, slug: r.data.slug, base: host ? '' : `/m/${r.data.slug}`, demo: false } })
+      if (!r.data.live) return setState({ loading: false, offline: true, brand: { company: { ...defaultCompany, ...r.data.settings }, slug: r.data.slug, base: atRoot ? '' : `/m/${r.data.slug}`, demo: false } })
+      setState({ loading: false, brand: { company: { ...defaultCompany, ...r.data.settings } as Company, slug: r.data.slug, base: atRoot ? '' : `/m/${r.data.slug}`, demo: false } })
     })
     return () => { cancelled = true }
-  }, [slug, host, localCompany])
+  }, [slug, host, atRoot, localCompany])
   return state
 }
 
-export function TenantShell({ slug, host }: { slug?: string; host?: string }) {
-  const t = useTenant(slug, host)
+export function TenantShell({ slug, host, root }: { slug?: string; host?: string; root?: boolean }) {
+  const t = useTenant(slug, host, root)
   useEffect(() => { if (t.brand) { document.title = t.brand.company.name; document.documentElement.dataset.accent = t.brand.company.accent } }, [t.brand])
   if (t.loading) return <div className="grid h-full place-items-center text-sm text-muted">Loading…</div>
   if (t.missing) return <Offline title="Page not found" text="We couldn't find this company's page. Check the address and try again." />
@@ -50,8 +51,9 @@ export function TenantShell({ slug, host }: { slug?: string; host?: string }) {
   )
 }
 
-export default function TenantSite({ host }: { host?: string }) {
+export default function TenantSite({ host, standaloneSlug }: { host?: string; standaloneSlug?: string }) {
   const { slug } = useParams()
+  if (standaloneSlug) return <TenantShell slug={standaloneSlug} root />
   return host ? <TenantShell host={host} /> : <TenantShell slug={slug} />
 }
 

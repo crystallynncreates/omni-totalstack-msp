@@ -2,7 +2,7 @@
 // activates workspaces on payment and locks them on non-payment (after a grace period).
 import { body, env, fail, mustDb, ok, origin, raw, sendEmail, type Ctx, type Req, type Res } from '../_lib/util'
 import { stripeCall, verifyStripe } from '../_lib/stripe'
-import { GRACE_DAYS, PLANS, type PlanId } from '../../shared/plans'
+import { GRACE_DAYS, HANDOFF_DAYS, PLANS, type PlanId } from '../../shared/plans'
 
 const planFromPrice = (priceId?: string): PlanId | null => {
   for (const p of Object.values(PLANS)) if (p.priceEnv && env(p.priceEnv) && env(p.priceEnv) === priceId) return p.id
@@ -25,7 +25,21 @@ export default async function billing(req: Req, res: Res, action: string, ctx: C
     const { error: dup } = await sb.from('billing_events').insert({ id: evt.id, type: evt.type, payload: evt })
     if (dup) return ok(res, { duplicate: true })
     const o = evt.data.object
-    const byCustomer = async (cust: string) => (await sb.from('orgs').select('id,name,status').eq('stripe_customer_id', cust).maybeSingle()).data
+    // Lifetime (Enterprise) orgs have no subscription — ignore any subscription events for them.
+    const byCustomer = async (cust: string) => (await sb.from('orgs').select('id,name,status,license').eq('stripe_customer_id', cust).neq('license', 'lifetime').maybeSingle()).data
+
+    // Enterprise: one-time lifetime purchase → standalone copy, handoff window, then disconnected from the platform
+    if (evt.type === 'checkout.session.completed' && o.mode === 'payment' && o.metadata?.plan === 'enterprise' && o.payment_status === 'paid') {
+      const orgId = o.metadata?.orgId || o.client_reference_id
+      const { data: prev } = await sb.from('orgs').select('stripe_subscription_id').eq('id', orgId).maybeSingle()
+      if (prev?.stripe_subscription_id && key) { try { await stripeCall(key, `/subscriptions/${prev.stripe_subscription_id}`, undefined, 'DELETE') } catch { /* already gone */ } }
+      const handoff = new Date(Date.now() + HANDOFF_DAYS * 864e5).toISOString()
+      await sb.from('orgs').update({ plan: 'enterprise', license: 'lifetime', status: 'active', grace_until: null, stripe_customer_id: o.customer, stripe_subscription_id: null, handoff_by: handoff }).eq('id', orgId)
+      await sb.from('billing_events').update({ org_id: orgId }).eq('id', evt.id)
+      const to = await ownerEmail(orgId)
+      if (to) await sendEmail(to, 'You own Omni TotalStack MSP Enterprise — next steps', `<p>Thank you! Your one-time Enterprise purchase is complete. There are no monthly fees.</p><p><b>What happens next:</b> we set up your own standalone copy, fully disconnected from the Omni platform, on the domain you purchase. Your current workspace stays online until <b>${new Date(handoff).toDateString()}</b> while we move your data over.</p><ol><li>Buy your domain (for example from Cloudflare or GoDaddy).</li><li>Open <a href="${origin(req)}/app/billing">Plan & Billing → Standalone setup</a> and follow the checklist.</li></ol>`)
+      return ok(res, { received: true })
+    }
 
     if (evt.type === 'checkout.session.completed' && o.mode === 'subscription') {
       const orgId = o.metadata?.orgId || o.client_reference_id
@@ -72,15 +86,23 @@ export default async function billing(req: Req, res: Res, action: string, ctx: C
 
   if (!['owner', 'admin'].includes(ctx.role)) return fail(res, 403, 'Only the workspace owner can manage billing.')
   if (org.comped) return fail(res, 400, 'This workspace is complimentary — there is nothing to bill.')
+  if (org.license === 'lifetime' && action === 'checkout') return fail(res, 400, 'You own Omni Enterprise outright — there is no subscription to change.')
   if (!key) return fail(res, 503, 'Online billing is not configured on this server yet.')
 
   if (action === 'checkout') {
     const b = await body<{ plan: PlanId }>(req)
     const plan = PLANS[b.plan] ? b.plan : org.plan
-    if (plan === 'free_forever') {
-      if (org.stripe_subscription_id) await stripeCall(key, `/subscriptions/${org.stripe_subscription_id}`, undefined, 'DELETE')
-      await sb.from('orgs').update({ plan: 'free_forever', status: 'active', grace_until: null, stripe_subscription_id: null }).eq('id', org.id)
-      return ok(res, { ok: true, downgraded: true })
+    // Enterprise = one-time lifetime purchase (the monthly subscription is canceled once it's paid)
+    if (PLANS[plan].billing === 'one_time') {
+      const params: Record<string, string> = {
+        mode: 'payment', 'line_items[0][price]': env(PLANS[plan].priceEnv!), 'line_items[0][quantity]': '1',
+        client_reference_id: org.id, 'metadata[orgId]': org.id, 'metadata[plan]': plan, 'payment_intent_data[metadata][orgId]': org.id, 'invoice_creation[enabled]': 'true',
+        success_url: `${origin(req)}/app/billing?paid=enterprise`, cancel_url: `${origin(req)}/app/billing`,
+      }
+      if (org.stripe_customer_id) params.customer = org.stripe_customer_id
+      else { params.customer_email = ctx.email; params.customer_creation = 'always' }
+      const s = await stripeCall<{ url: string }>(key, '/checkout/sessions', params)
+      return ok(res, { url: s.url })
     }
     // Existing subscription → switch price in place. Otherwise → new Checkout.
     if (org.stripe_subscription_id && org.status !== 'canceled') {

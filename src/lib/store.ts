@@ -7,7 +7,7 @@ import * as seed from './seed'
 import { iso, uid } from './format'
 import { PLANS, limitFor, type OrgStatus, type PlanId } from '../../shared/plans'
 
-export const APP_VERSION = '1.1.0'
+export const APP_VERSION = '1.2.0'
 
 type Collections = {
   clients: T.Client[]
@@ -58,6 +58,8 @@ export interface Session {
   graceUntil?: string | null
   currentPeriodEnd?: string | null
   customDomain?: string | null
+  license?: 'subscription' | 'lifetime'
+  handoffBy?: string | null
   role: T.Role
   clientId?: string | null
   email: string

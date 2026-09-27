@@ -215,7 +215,7 @@ export default function Landing() {
         <div className="mb-2 flex items-center justify-center gap-2"><Logo size={22} /> {company.legalName}</div>
         {company.address}, {company.city}, {company.state} {company.zip} · {company.phone} · {company.email}
         <div className="mt-3"><Link to={`${base}/portal`} className="hover:text-accent">Client portal</Link> · <Link to="/login" className="hover:text-accent">Team sign-in</Link></div>
-        <div className="mt-2 text-xs">Powered by <Link to="/" className="hover:text-accent">Omni TotalStack MSP</Link></div>
+        {!import.meta.env.VITE_STANDALONE_SLUG && <div className="mt-2 text-xs">Powered by <Link to="/" className="hover:text-accent">Omni TotalStack MSP</Link></div>}
       </footer>
 
       {/* Floating AI call button */}

@@ -10,8 +10,6 @@ import { useCan } from '../components/Gate'
 import { Link } from 'react-router-dom'
 import type { IntegrationId } from '../lib/types'
 
-// Integrations included on Free Forever; everything else needs a paid plan.
-const FREE_SET: IntegrationId[] = ['rmm', 'huntress', 'm365', 'entra', 'unifi']
 const PLAN_FEATURE: Partial<Record<IntegrationId, 'ai_assistant' | 'ai_voice' | 'quickbooks' | 'payroll'>> = { claude: 'ai_assistant', voice: 'ai_voice', quickbooks: 'quickbooks', gusto: 'payroll' }
 
 export default function Integrations() {
@@ -20,7 +18,7 @@ export default function Integrations() {
   const [q, setQ] = useState('')
   const connected = INTEGRATIONS.filter((i) => s.integrations[i.id]?.connected).length
   const can = useCan()
-  const allowed = (id: IntegrationId) => (PLAN_FEATURE[id] ? can(PLAN_FEATURE[id]!) : FREE_SET.includes(id) || can('all_integrations'))
+  const allowed = (id: IntegrationId) => (PLAN_FEATURE[id] ? can(PLAN_FEATURE[id]!) : can('all_integrations'))
 
   return (
     <div>

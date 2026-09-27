@@ -11,8 +11,11 @@ create table orgs (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text unique not null check (slug ~ '^[a-z0-9][a-z0-9-]{1,40}$'),
-  plan text not null default 'free_forever' check (plan in ('free_forever','unlimited','business','enterprise')),
-  status text not null default 'pending' check (status in ('pending','active','past_due','suspended','canceled')),
+  plan text not null default 'unlimited' check (plan in ('unlimited','business','enterprise')),
+  status text not null default 'pending' check (status in ('pending','active','past_due','suspended','canceled','disconnected')),
+  license text not null default 'subscription' check (license in ('subscription','lifetime')), -- lifetime = Enterprise one-time purchase
+  handoff_by timestamptz,                             -- Enterprise: hosted workspace stays on until this date, then disconnects
+  handed_off_at timestamptz,
   comped boolean not null default false,              -- never billed (platform owner, partners)
   stripe_customer_id text,
   stripe_subscription_id text,
@@ -76,9 +79,12 @@ create or replace function my_role(o uuid) returns text language sql stable secu
   $$ select role from org_members where org_id = o and user_id = auth.uid() $$;
 create or replace function my_client(o uuid) returns text language sql stable security definer set search_path = public as
   $$ select client_id from org_members where org_id = o and user_id = auth.uid() $$;
--- A workspace is usable when paid, inside its grace period, or comped.
+-- A workspace is usable when paid, inside its grace period, comped, or an Enterprise buyer before handoff.
 create or replace function org_live(o uuid) returns boolean language sql stable security definer set search_path = public as
-  $$ select exists (select 1 from orgs where id = o and (comped or status = 'active' or (status = 'past_due' and (grace_until is null or grace_until > now())))) $$;
+  $$ select exists (select 1 from orgs where id = o and (
+       comped
+    or (status <> 'disconnected' and license = 'lifetime' and (handoff_by is null or handoff_by > now()))
+    or (license = 'subscription' and (status = 'active' or (status = 'past_due' and (grace_until is null or grace_until > now())))))) $$;
 
 -- ── Row Level Security ─────────────────────────────────────────────────────
 alter table orgs enable row level security;
@@ -128,25 +134,11 @@ begin
     new.plan := old.plan; new.status := old.status; new.comped := old.comped;
     new.stripe_customer_id := old.stripe_customer_id; new.stripe_subscription_id := old.stripe_subscription_id;
     new.current_period_end := old.current_period_end; new.grace_until := old.grace_until; new.slug := old.slug;
-    new.owner_user_id := old.owner_user_id;
+    new.owner_user_id := old.owner_user_id; new.license := old.license; new.handoff_by := old.handoff_by; new.handed_off_at := old.handed_off_at;
   end if;
   return new;
 end $$;
 create trigger orgs_protect before update on orgs for each row execute function protect_billing_columns();
-
--- Plan limits (clients / devices) enforced in the database.
-create or replace function enforce_plan_limits() returns trigger language plpgsql security definer set search_path = public as $$
-declare p text; c boolean; lim int; n int;
-begin
-  if new.collection not in ('clients','devices') then return new; end if;
-  select plan, comped into p, c from orgs where id = new.org_id;
-  if c or p <> 'free_forever' then return new; end if;
-  lim := case new.collection when 'clients' then 3 else 50 end;
-  select count(*) into n from records where org_id = new.org_id and collection = new.collection;
-  if n >= lim then raise exception 'PLAN_LIMIT: the Free Forever plan allows % %. Upgrade to add more.', lim, new.collection; end if;
-  return new;
-end $$;
-create trigger records_limits before insert on records for each row execute function enforce_plan_limits();
 
 -- Seat limits (staff members) enforced in the database.
 create or replace function enforce_seat_limits() returns trigger language plpgsql security definer set search_path = public as $$
@@ -155,7 +147,7 @@ begin
   if new.role = 'client' then return new; end if;
   select plan, comped into p, c from orgs where id = new.org_id;
   if c or p = 'enterprise' then return new; end if;
-  lim := case p when 'free_forever' then 1 when 'unlimited' then 2 when 'business' then 10 else 1000000 end;
+  lim := case p when 'unlimited' then 2 when 'business' then 10 else 1000000 end;
   select count(*) into n from org_members where org_id = new.org_id and role <> 'client';
   if n >= lim then raise exception 'SEAT_LIMIT: your plan allows % staff seat(s). Upgrade to add more.', lim; end if;
   return new;

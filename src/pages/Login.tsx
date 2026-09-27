@@ -4,7 +4,7 @@ import { ArrowRight, PlayCircle } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
 import { bootstrap, cloudEnabled } from '../lib/cloud'
-import { OmniMark } from '../components/Logo'
+import Logo, { OmniMark } from '../components/Logo'
 
 export default function Login() {
   const s = useStore()
@@ -45,9 +45,9 @@ export default function Login() {
     <div className="grid min-h-full place-items-center p-4">
       <div className="glass w-full max-w-md p-8 animate-fadeUp">
         <div className="mb-6 flex flex-col items-center text-center">
-          <OmniMark size={52} />
+          {import.meta.env.VITE_STANDALONE_SLUG ? <Logo size={52} /> : <OmniMark size={52} />}
           <h1 className="mt-3 h-display text-2xl">Sign in</h1>
-          <p className="text-sm text-muted">Omni TotalStack MSP Command Center</p>
+          <p className="text-sm text-muted">{import.meta.env.VITE_STANDALONE_SLUG ? 'Command Center' : 'Omni TotalStack MSP Command Center'}</p>
         </div>
         {p.get('created') && <p className="mb-4 rounded-xl bg-ok/10 p-3 text-sm text-ok">{p.get('owner') ? 'Your complimentary owner workspace is ready.' : 'Your workspace is ready.'} Sign in to start the setup wizard.</p>}
         <form onSubmit={signIn} className="space-y-3">
@@ -58,11 +58,11 @@ export default function Login() {
         </form>
         {cloudEnabled && <button onClick={reset} className="mt-2 w-full text-center text-xs text-muted hover:text-accent">Forgot password?</button>}
         <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
-        <button onClick={exploreDemo} className="btn-ghost w-full"><PlayCircle size={16} /> Explore the demo workspace</button>
+        {!import.meta.env.VITE_STANDALONE_SLUG && <button onClick={exploreDemo} className="btn-ghost w-full"><PlayCircle size={16} /> Explore the demo workspace</button>}
         {!cloudEnabled && <p className="mt-4 rounded-xl bg-accent/5 p-3 text-center text-xs text-muted">Demo mode: the database isn't connected on this copy, so everything runs on sample data in your browser.</p>}
         <div className="mt-5 flex justify-between text-xs text-muted">
-          <Link to="/" className="hover:text-accent">← Omni home</Link>
-          <Link to="/signup" className="hover:text-accent">New to Omni? Get started →</Link>
+          <Link to="/" className="hover:text-accent">← Home</Link>
+          {!import.meta.env.VITE_STANDALONE_SLUG && <Link to="/signup" className="hover:text-accent">New to Omni? Get started →</Link>}
         </div>
       </div>
     </div>

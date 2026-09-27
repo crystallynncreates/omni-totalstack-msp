@@ -22,10 +22,11 @@ import me from './_handlers/me'
 import tenant from './_handlers/tenant'
 import invites from './_handlers/invites'
 import platform from './_handlers/platform'
+import exportData from './_handlers/export'
 
 export type Handler = (req: Req, res: Res, action: string, ctx: Ctx | null) => unknown
 
-const routes: Record<string, Handler> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll, signup, billing, me, tenant, invites, platform }
+const routes: Record<string, Handler> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll, signup, billing, me, tenant, invites, platform, export: exportData }
 
 // Endpoints reachable without signing in (each verifies its own secret, token, signature or slug).
 function isPublic(root: string, action: string, method: string) {
@@ -39,7 +40,7 @@ function isPublic(root: string, action: string, method: string) {
   return false
 }
 // Signed-in routes that still work when a workspace is locked for non-payment (so the owner can pay).
-const WORKS_WHEN_LOCKED = new Set(['me', 'billing', 'platform'])
+const WORKS_WHEN_LOCKED = new Set(['me', 'billing', 'platform', 'export']) // owners can always take their data with them
 
 export default async function handler(req: Req, res: Res) {
   const raw = String(req.query.path || '').replace(/^\/+/, '')

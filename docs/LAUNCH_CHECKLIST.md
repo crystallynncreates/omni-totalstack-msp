@@ -9,8 +9,8 @@ Do these once, in order. Each step says where to click.
 4. **Project Settings → API**: copy the **URL**, the **anon key** and the **service_role key**.
 
 ## 2. Stripe: how MSPs pay you, about 10 minutes
-1. dashboard.stripe.com → **Product catalog** → add product **Omni TotalStack MSP** with three monthly prices:
-   **Unlimited $99**, **Business $249**, **Enterprise $599**. Copy each `price_…` ID.
+1. dashboard.stripe.com → **Product catalog** → add product **Omni TotalStack MSP** with three prices:
+   **Unlimited $99 / month (recurring)**, **Business $249 / month (recurring)**, **Enterprise $4,500 (one-time)**. Copy each `price_…` ID.
 2. **Developers → Webhooks → Add endpoint**: `https://YOUR-DOMAIN/api/billing/webhook`
    Events: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`.
    Copy the **signing secret**.
@@ -28,10 +28,10 @@ resend.com → **Domains** → add and verify `omnitotalstack.com` → create an
 4. Redeploy.
 
 ## 5. Your free owner account
-Go to `/signup` and sign up with **crystallynncreates@gmail.com**. Any plan works; it becomes a complimentary **Enterprise** workspace that is never billed. The **Omni Owner Console** then appears in the menu.
+Go to `/signup` and sign up with **crystallynncreates@gmail.com**. Any plan works; it becomes a complimentary workspace with every feature that is never billed and stays on the platform. The **Omni Owner Console** then appears in the menu.
 
 ## 6. Test a customer end to end (Stripe test mode)
-1. In a private window, go to `/signup?plan=unlimited` and pay with card `4242 4242 4242 4242`.
+1. In a private window, go to `/signup?plan=unlimited` and pay with card `4242 4242 4242 4242`. Also try `/signup?plan=enterprise` (one-time payment); Plan & Billing then shows the **Standalone setup** checklist.
 2. The workspace activates and `/welcome` shows. Sign in and the setup wizard asks for logo, colors and details.
 3. Open `/m/<their-slug>`: their branded website. Open `/m/<their-slug>/portal`: their client portal.
 4. In the Stripe dashboard, simulate a failed payment. The owner sees a **7-day grace** banner. Run the daily job (or wait) after the grace date: the workspace, website and portal pause. Pay again and everything reactivates.
@@ -43,4 +43,5 @@ Go to `/signup` and sign up with **crystallynncreates@gmail.com**. Any plan work
 | Grace period ends (daily job) | Status `suspended`: Command Center, public website and client portal are locked (enforced by the database), owner emailed |
 | Payment succeeds | Status `active` again immediately; nothing is lost |
 | Subscription canceled | Status `canceled`, locked. Data is kept; resubscribing reactivates it |
-| Owner Console | You can comp, extend grace, suspend or reactivate any MSP manually |
+| Enterprise purchased ($4,500 once) | Lifetime license; any monthly subscription is canceled; hosted workspace stays on for 30 days while their standalone copy is set up (docs/STANDALONE.md), then disconnected |
+| Owner Console | You can comp, extend grace, suspend or reactivate any MSP manually, and disconnect or extend Enterprise handoffs |

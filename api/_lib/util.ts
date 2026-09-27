@@ -49,6 +49,7 @@ export interface Org {
   stripe_customer_id?: string | null; stripe_subscription_id?: string | null; current_period_end?: string | null
   grace_until?: string | null; custom_domain?: string | null; settings: Record<string, unknown>; integrations: Record<string, unknown>
   owner_user_id?: string | null; created_at?: string
+  license?: 'subscription' | 'lifetime'; handoff_by?: string | null; handed_off_at?: string | null
 }
 export interface Ctx { userId: string; email: string; orgId: string; role: string; clientId?: string | null; org: Org; platformOwner: boolean }
 

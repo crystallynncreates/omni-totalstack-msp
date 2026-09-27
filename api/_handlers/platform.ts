@@ -7,7 +7,7 @@ export default async function platform(req: Req, res: Res, action: string) {
   if (!user || !isPlatformOwner(user.email)) return fail(res, 403, 'Platform owner only.')
   const sb = mustDb()
   if (action === 'orgs') {
-    const { data: orgs } = await sb.from('orgs').select('id, name, slug, plan, status, comped, grace_until, current_period_end, custom_domain, created_at').order('created_at', { ascending: false })
+    const { data: orgs } = await sb.from('orgs').select('id, name, slug, plan, status, comped, license, handoff_by, handed_off_at, grace_until, current_period_end, custom_domain, created_at').order('created_at', { ascending: false })
     const { data: members } = await sb.from('org_members').select('org_id, role, email')
     const { data: counts } = await sb.from('records').select('org_id, collection').in('collection', ['clients', 'devices'])
     const rows = (orgs || []).map((o) => ({
@@ -17,17 +17,20 @@ export default async function platform(req: Req, res: Res, action: string) {
       clientUsers: (members || []).filter((m) => m.org_id === o.id && m.role === 'client').length,
       clients: (counts || []).filter((c) => c.org_id === o.id && c.collection === 'clients').length,
       devices: (counts || []).filter((c) => c.org_id === o.id && c.collection === 'devices').length,
-      mrr: o.comped || !['active', 'past_due'].includes(o.status) ? 0 : PLANS[o.plan as PlanId].price ?? 0,
+      mrr: o.comped || o.license === 'lifetime' || !['active', 'past_due'].includes(o.status) ? 0 : PLANS[o.plan as PlanId].price ?? 0,
+      lifetime: !o.comped && o.license === 'lifetime' ? PLANS.enterprise.price : 0,
     }))
-    return ok(res, { orgs: rows, mrr: rows.reduce((a, r) => a + r.mrr, 0) })
+    return ok(res, { orgs: rows, mrr: rows.reduce((a, r) => a + r.mrr, 0), lifetime: rows.reduce((a, r) => a + r.lifetime, 0) })
   }
   if (action === 'update') {
-    const b = await body<{ orgId: string; plan?: PlanId; status?: string; comped?: boolean; extendGraceDays?: number }>(req)
+    const b = await body<{ orgId: string; plan?: PlanId; status?: string; comped?: boolean; extendGraceDays?: number; handoffNow?: boolean; extendHandoffDays?: number }>(req)
     const patch: Record<string, unknown> = {}
     if (b.plan && PLANS[b.plan]) patch.plan = b.plan
     if (b.status) patch.status = b.status
     if (typeof b.comped === 'boolean') patch.comped = b.comped
     if (b.extendGraceDays) { patch.status = 'past_due'; patch.grace_until = new Date(Date.now() + b.extendGraceDays * 864e5).toISOString() }
+    if (b.handoffNow) { patch.status = 'disconnected'; patch.handed_off_at = new Date().toISOString() }
+    if (b.extendHandoffDays) patch.handoff_by = new Date(Date.now() + b.extendHandoffDays * 864e5).toISOString()
     if (patch.status === 'active') patch.grace_until = null
     const { error } = await sb.from('orgs').update(patch).eq('id', b.orgId)
     if (error) return fail(res, 400, error.message)

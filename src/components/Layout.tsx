@@ -15,6 +15,8 @@ import { signOut } from '../lib/cloud'
 import { orgIsLive, PLANS, type Feature } from '../../shared/plans'
 import { daysUntil, fmtDate } from '../lib/format'
 
+export const STANDALONE = !!import.meta.env.VITE_STANDALONE_SLUG
+
 export const NAV = [
   { group: 'Business Suite', items: [
     { to: '/app', label: 'Command Center', icon: LayoutDashboard, tour: 'nav-home', end: true },
@@ -41,7 +43,7 @@ export const NAV = [
     { to: '/app/integrations', label: 'Integrations', icon: Plug, tour: 'nav-integrations' },
     { to: '/app/assistant', label: 'AI Assistant', icon: Bot, tour: 'nav-assistant', feature: 'ai_assistant' as Feature },
     { to: '/app/team', label: 'Team & Client Logins', icon: UsersRound, tour: 'nav-team' },
-    { to: '/app/billing', label: 'Plan & Billing', icon: CreditCard, tour: 'nav-billing' },
+    ...(STANDALONE ? [] : [{ to: '/app/billing', label: 'Plan & Billing', icon: CreditCard, tour: 'nav-billing' }]),
     { to: '/app/admin', label: 'Admin & Branding', icon: Settings, tour: 'nav-admin' },
   ] },
 ]
@@ -133,7 +135,7 @@ export default function Layout() {
   }, [ui.setupDone, ui.tourDone, ui.lastSeenVersion])
 
   if (session?.role === 'client') return <Navigate to={`/m/${session.slug}/portal`} replace />
-  const locked = !!session && !orgIsLive({ status: session.status, comped: session.comped, grace_until: session.graceUntil })
+  const locked = !!session && !orgIsLive({ status: session.status, comped: session.comped, grace_until: session.graceUntil, license: session.license, handoff_by: session.handoffBy })
   const graceDays = session?.status === 'past_due' && session.graceUntil ? Math.max(0, daysUntil(session.graceUntil)) : null
   const doSignOut = async () => { if (session) await signOut(); setUI({ signedIn: false }); nav('/login') }
 
@@ -154,7 +156,7 @@ export default function Layout() {
                   {i.feature && !can(i.feature) && <Lock size={12} className="ml-auto text-muted" />}
                 </NavLink>
               ))}
-              {g.group === 'System' && session?.platformOwner && (
+              {g.group === 'System' && session?.platformOwner && !STANDALONE && (
                 <NavLink to="/app/owner" className={({ isActive }) => cx('flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm', isActive ? 'bg-warn/15 font-medium text-warn' : 'text-warn/80 hover:bg-warn/10')}><Crown size={17} /> Omni Owner Console</NavLink>
               )}
             </div>
@@ -162,7 +164,7 @@ export default function Layout() {
         </nav>
         <div className="border-t border-line p-3 text-xs text-muted">
           <Link to={`/m/${session?.slug ?? 'demo'}`} target="_blank" className="mb-2 flex items-center gap-1.5 hover:text-accent"><ExternalLink size={13} /> View my public website</Link>
-          v{APP_VERSION} · {session ? `${PLANS[session.plan].name}${session.comped ? ' · complimentary' : ''}` : 'Demo data'}
+          v{APP_VERSION} · {STANDALONE ? 'Standalone edition' : session ? `${PLANS[session.plan].name}${session.license === 'lifetime' ? ' · owned' : session.comped ? ' · complimentary' : ''}` : 'Demo data'}
         </div>
       </aside>
       {mobile && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setMobile(false)} />}
@@ -179,7 +181,7 @@ export default function Layout() {
             <button onClick={doSignOut} className="rounded-xl p-2 hover:bg-ink/5" title="Sign out" aria-label="Sign out"><LogOut size={18} /></button>
           </div>
         </header>
-        {graceDays !== null && !session?.comped && (
+        {graceDays !== null && !session?.comped && session?.license !== 'lifetime' && (
           <div className="no-print flex flex-wrap items-center justify-center gap-2 border-b border-warn/40 bg-warn/10 px-4 py-2 text-center text-sm text-warn">
             <AlertTriangle size={15} /> Your Omni payment didn't go through. Everything stays online for <b>{graceDays} more day{graceDays === 1 ? '' : 's'}</b> ({fmtDate(session!.graceUntil!)}), then your workspace, website and client portal pause.
             <Link to="/app/billing" className="btn-primary px-3 py-1 text-xs">Update payment</Link>
@@ -190,7 +192,7 @@ export default function Layout() {
             You're exploring with <b className="text-ink">demo data</b> — nothing here is real. Go to <Link className="text-accent underline" to="/app/admin">Admin → Workspace</Link> to start fresh with your own clients.
           </div>
         )}
-        <main className="mx-auto w-full max-w-[1500px] flex-1 p-4 md:p-6">{locked && loc.pathname !== '/app/billing' ? <Locked /> : <Outlet />}</main>
+        <main className="mx-auto w-full max-w-[1500px] flex-1 p-4 md:p-6">{locked && loc.pathname !== '/app/billing' ? <Locked disconnected={session?.status === 'disconnected' || session?.license === 'lifetime'} /> : <Outlet />}</main>
       </div>
 
       {!ui.setupDone && !locked && (!session || session.role === 'owner') && <SetupWizard />}
@@ -201,8 +203,18 @@ export default function Layout() {
   )
 }
 
-function Locked() {
+function Locked({ disconnected }: { disconnected?: boolean }) {
   const session = useStore((s) => s.session)
+  if (disconnected) return (
+    <div className="grid min-h-[70vh] place-items-center">
+      <div className="glass max-w-lg p-8 text-center">
+        <div className="mx-auto w-fit rounded-2xl bg-accent/10 p-3 text-accent"><Lock /></div>
+        <h1 className="mt-3 h-display text-2xl">This workspace now runs on your own copy</h1>
+        <p className="mt-2 text-sm text-muted">You own Omni Enterprise. Your workspace has been handed off to your standalone installation on your own domain and is disconnected from the Omni platform. You can still download a full export of your data.</p>
+        {session && ['owner', 'admin'].includes(session.role) && <Link to="/app/billing" className="btn-primary mt-5">Download my data</Link>}
+      </div>
+    </div>
+  )
   return (
     <div className="grid min-h-[70vh] place-items-center">
       <div className="glass max-w-lg p-8 text-center">

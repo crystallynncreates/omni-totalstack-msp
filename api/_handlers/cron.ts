@@ -56,6 +56,13 @@ export default async function cron(req: Req, res: Res, job: string, ctx: Ctx | n
     const today = new Date().toISOString().slice(0, 10)
     let locked = 0, overdue = 0
     for (const o of (orgs || []) as Org[]) {
+      // Enterprise: handoff window over → disconnect from the platform (they run on their standalone copy now)
+      if (o.license === 'lifetime' && !o.comped && o.status !== 'disconnected' && o.handoff_by && new Date(o.handoff_by) < new Date()) {
+        await sb.from('orgs').update({ status: 'disconnected', handed_off_at: new Date().toISOString() }).eq('id', o.id)
+        const { data: owner } = await sb.from('org_members').select('email').eq('org_id', o.id).eq('role', 'owner').limit(1).maybeSingle()
+        if (owner?.email) await sendEmail(owner.email, 'Your Omni workspace has moved to your standalone copy', `<p>Your handoff period has ended and your workspace on the Omni platform is now disconnected. Everything runs on your own standalone copy from here on.</p>`)
+        continue
+      }
       // Non-payment: grace period over → lock the workspace, its landing page and client portal
       if (!o.comped && o.status === 'past_due' && o.grace_until && new Date(o.grace_until) < new Date()) {
         await sb.from('orgs').update({ status: 'suspended' }).eq('id', o.id)
