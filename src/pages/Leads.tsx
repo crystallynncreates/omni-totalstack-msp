@@ -1,5 +1,5 @@
 // Leads & Bookings — everything captured by the landing page, AI calls and the booking calendar.
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PhoneCall, CalendarCheck, FileSignature, UserPlus, Magnet, ExternalLink } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { Badge, Card, Empty, PageHeader, Stat, toast } from '../components/ui'
@@ -34,7 +34,7 @@ export default function Leads() {
 
   return (
     <div>
-      <PageHeader title="Leads & Bookings" subtitle="From your website, AI calls and online booking" actions={<a href="/" target="_blank" className="btn-ghost">View landing page <ExternalLink size={13} /></a>}
+      <PageHeader title="Leads & Bookings" subtitle="From your website, AI calls and online booking" actions={<Link to="/" target="_blank" className="btn-ghost">View landing page <ExternalLink size={13} /></Link>}
         help="New leads appear here automatically. Use 'AI call' to have the voice assistant call them, or 'Start proposal' to turn them into a client and build a 3-option proposal." />
       <div className="mb-4 grid gap-4 sm:grid-cols-4">
         <Stat label="New leads" value={s.leads.filter((l) => l.status === 'new').length} icon={<Magnet size={16} />} />

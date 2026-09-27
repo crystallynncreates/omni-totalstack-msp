@@ -114,7 +114,7 @@ export default function Discovery() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card title="Install in 3 steps" icon={<Terminal size={16} />}>
             <ol className="list-decimal space-y-3 pl-5 text-sm">
-              <li>Download the agent onto any always-on computer at the client site (Windows, Mac or Linux with Python 3).<div className="mt-2"><a className="btn-primary" href="/agent/omni_scan.py" download><Download size={15} /> Download omni_scan.py</a></div></li>
+              <li>Download the agent onto any always-on computer at the client site (Windows, Mac or Linux with Python 3).<div className="mt-2"><a className="btn-primary" href={`${import.meta.env.BASE_URL}agent/omni_scan.py`} download><Download size={15} /> Download omni_scan.py</a></div></li>
               <li>Run a one-time scan and save the results:<pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-xs">python omni_scan.py --range 192.168.1.0/24 --out results.json</pre>Then use <b>Import agent results</b> on the Scan tab.</li>
               <li>Or connect it to Omni for automatic scans (every 24h + on demand):<pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-xs">python omni_scan.py --range 192.168.1.0/24 \{'\n'}  --post https://YOUR-OMNI-DOMAIN/api/discovery/ingest \{'\n'}  --site {siteId} --token YOUR_AGENT_TOKEN</pre></li>
             </ol>

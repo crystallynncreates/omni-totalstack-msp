@@ -1,5 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+
+// VITE_HASH_ROUTER=1 builds a portable version (hash URLs) that runs from any static host or preview link.
+const Router = import.meta.env.VITE_HASH_ROUTER === '1' ? HashRouter : BrowserRouter
 import { useStore } from './lib/store'
 import Layout from './components/Layout'
 
@@ -42,7 +45,7 @@ export default function App() {
   }, [theme, accent])
 
   return (
-    <BrowserRouter>
+    <Router>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -77,6 +80,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </Router>
   )
 }
