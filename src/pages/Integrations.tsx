@@ -6,12 +6,21 @@ import { INTEGRATIONS, MARKETPLACE, MARKETPLACE_COUNT, type IntegrationDef } fro
 import { Badge, Card, Field, Modal, PageHeader, toast, cx } from '../components/ui'
 import { api } from '../lib/api'
 import { iso, timeAgo } from '../lib/format'
+import { useCan } from '../components/Gate'
+import { Link } from 'react-router-dom'
+import type { IntegrationId } from '../lib/types'
+
+// Integrations included on Free Forever; everything else needs a paid plan.
+const FREE_SET: IntegrationId[] = ['rmm', 'huntress', 'm365', 'entra', 'unifi']
+const PLAN_FEATURE: Partial<Record<IntegrationId, 'ai_assistant' | 'ai_voice' | 'quickbooks' | 'payroll'>> = { claude: 'ai_assistant', voice: 'ai_voice', quickbooks: 'quickbooks', gusto: 'payroll' }
 
 export default function Integrations() {
   const s = useStore()
   const [open, setOpen] = useState<IntegrationDef | null>(null)
   const [q, setQ] = useState('')
   const connected = INTEGRATIONS.filter((i) => s.integrations[i.id]?.connected).length
+  const can = useCan()
+  const allowed = (id: IntegrationId) => (PLAN_FEATURE[id] ? can(PLAN_FEATURE[id]!) : FREE_SET.includes(id) || can('all_integrations'))
 
   return (
     <div>
@@ -30,7 +39,7 @@ export default function Integrations() {
               <div className="mt-2 flex flex-wrap gap-1">{i.powers.map((p) => <span key={p} className="chip bg-accent/10 text-accent">{p}</span>)}</div>
               {st?.lastSync && <div className="mt-2 text-xs text-muted">Last sync {timeAgo(st.lastSync)}</div>}
               <div className="mt-3 flex gap-2">
-                <button className={st?.connected ? 'btn-ghost flex-1' : 'btn-primary flex-1'} onClick={() => setOpen(i)}><Plug size={14} /> {st?.connected ? 'Manage' : 'Connect'}</button>
+                {allowed(i.id) ? <button className={st?.connected ? 'btn-ghost flex-1' : 'btn-primary flex-1'} onClick={() => setOpen(i)}><Plug size={14} /> {st?.connected ? 'Manage' : 'Connect'}</button> : <Link to="/app/billing" className="btn-ghost flex-1"><Lock size={14} /> Upgrade to connect</Link>}
                 {i.docs && <a href={i.docs} target="_blank" rel="noreferrer" className="btn-ghost" title="API docs"><ExternalLink size={14} /></a>}
               </div>
             </div>
@@ -66,8 +75,12 @@ function ConnectModal({ def, onClose }: { def: IntegrationDef; onClose: () => vo
     const test = await api<{ ok: boolean }>(`integrations/test?id=${def.id}`)
     s.setIntegration(def.id, { connected: true, config: publicCfg, lastSync: iso() })
     s.log(`Connected integration: ${def.name}`)
+    if (def.id === 'quickbooks' && s.session) {
+      const c = await api<{ url: string }>('quickbooks/connect')
+      if (c.ok && c.data?.url) { window.location.href = c.data.url; return }
+    }
     setBusy(false); onClose()
-    toast(r.ok && test.ok ? `${def.name} connected and verified` : `${def.name} saved. Add the environment variables below on your server to activate live data.`, r.ok ? 'ok' : 'warn')
+    toast(r.ok && test.ok ? `${def.name} connected and verified` : s.session ? `${def.name} saved. We couldn't verify it yet — double-check the keys.` : `${def.name} saved (demo). Live data starts once Omni is deployed.`, r.ok ? 'ok' : 'warn')
   }
 
   return (
@@ -76,14 +89,17 @@ function ConnectModal({ def, onClose }: { def: IntegrationDef; onClose: () => vo
         <div>
           <div className="mb-2 text-sm font-semibold">How to get your keys</div>
           <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted">{def.howTo.map((h) => <li key={h}>{h}</li>)}</ol>
-          <div className="mt-4 rounded-xl bg-ink/5 p-3 text-xs">
-            <div className="mb-1 font-semibold">Server environment variables</div>
-            {def.envVars.map((e) => <div key={e} className="font-mono">{e}</div>)}
-            <div className="mt-2 text-muted">Set these in Vercel → Project → Settings → Environment Variables (see docs/INTEGRATIONS.md).</div>
-          </div>
+          {s.session ? (
+            <div className="mt-4 rounded-xl bg-ok/5 p-3 text-xs text-muted">Your keys are encrypted and stored for <b>your workspace only</b>. No other MSP on Omni can ever use them.</div>
+          ) : (
+            <div className="mt-4 rounded-xl bg-ink/5 p-3 text-xs">
+              <div className="mb-1 font-semibold">Server environment variables (single-company install)</div>
+              {def.envVars.map((e) => <div key={e} className="font-mono">{e}</div>)}
+            </div>
+          )}
         </div>
         <div className="space-y-3">
-          {def.fields.map((f) => (
+          {s.session && def.id === 'quickbooks' ? <p className="rounded-xl bg-accent/5 p-3 text-sm">Click <b>Save & connect</b>, sign in to Intuit, and choose your company. No keys needed.</p> : def.fields.map((f) => (
             <Field key={f.key} label={f.label} hint={f.help}>
               <div className="relative">
                 <input type={f.secret ? 'password' : 'text'} className="input pr-8" placeholder={f.secret && st.connected ? '•••••••• (saved on server)' : f.placeholder} value={vals[f.key] ?? ''} onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })} />

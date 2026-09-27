@@ -1,7 +1,7 @@
-// Single API router (keeps us within Vercel Hobby's function limit).
-// vercel.json rewrites /api/<path> → /api?path=<path>; each handler lives in api/_handlers.
-import type { Req, Res } from './_lib/util'
-import { fail, requireUser } from './_lib/util'
+// Single API router (keeps Omni within Vercel Hobby's function limit).
+// vercel.json rewrites /api/<route>/<action> → /api?path=<route>/<action>.
+import type { Req, Res, Ctx } from './_lib/util'
+import { context, fail, live, httpError } from './_lib/util'
 import claude from './_handlers/claude'
 import { leads, book } from './_handlers/leads'
 import voice from './_handlers/voice'
@@ -16,24 +16,49 @@ import cron from './_handlers/cron'
 import discovery from './_handlers/discovery'
 import integrations from './_handlers/integrations'
 import payroll from './_handlers/payroll'
+import signup from './_handlers/signup'
+import billing from './_handlers/billing'
+import me from './_handlers/me'
+import tenant from './_handlers/tenant'
+import invites from './_handlers/invites'
+import platform from './_handlers/platform'
 
-type H = (req: Req, res: Res, action: string) => unknown
-const routes: Record<string, H> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll }
+export type Handler = (req: Req, res: Res, action: string, ctx: Ctx | null) => unknown
+
+const routes: Record<string, Handler> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll, signup, billing, me, tenant, invites, platform }
+
+// Endpoints reachable without signing in (each verifies its own secret, token, signature or slug).
+function isPublic(root: string, action: string, method: string) {
+  if (['signup', 'tenant', 'leads', 'book', 'voice'].includes(root)) return true
+  if (root === 'billing' && action === 'webhook') return true
+  if (root === 'invites' && ['lookup', 'accept'].includes(action)) return true
+  if (root === 'stripe' && ['webhook', 'pay'].includes(action)) return true
+  if (root === 'quickbooks' && action === 'callback') return true
+  if (root === 'discovery' && ['ingest', 'jobs'].includes(action)) return true
+  if (root === 'cron' && method === 'GET') return true
+  return false
+}
+// Signed-in routes that still work when a workspace is locked for non-payment (so the owner can pay).
+const WORKS_WHEN_LOCKED = new Set(['me', 'billing', 'platform'])
 
 export default async function handler(req: Req, res: Res) {
   const raw = String(req.query.path || '').replace(/^\/+/, '')
   const [root, ...rest] = raw.split('/')
+  const action = rest.join('/')
   const h = routes[root]
   if (!h) return fail(res, 404, `Unknown API route: ${raw || '(none)'}`)
-  // Public endpoints: landing page forms, client payments, OAuth callbacks, agent (own token), cron (own secret).
-  const action = rest.join('/')
-  const isPublic = ['leads', 'book', 'voice'].includes(root) || (root === 'stripe') || (root === 'quickbooks' && ['connect', 'callback'].includes(action)) || (root === 'discovery' && ['ingest', 'jobs'].includes(action)) || (root === 'cron' && req.method === 'GET')
-  if (!isPublic && !(await requireUser(req))) return fail(res, 401, 'Sign in required')
   try {
-    return await h(req, res, rest.join('/'))
+    let ctx: Ctx | null = null
+    if (!isPublic(root, action, req.method || 'GET')) {
+      ctx = await context(req)
+      if (!ctx && root !== 'me' && root !== 'platform') return fail(res, 401, 'Please sign in.')
+      if (ctx && !live(ctx.org) && !WORKS_WHEN_LOCKED.has(root)) return fail(res, 402, 'This workspace is paused for non-payment. The owner can reactivate it under Billing.', { locked: true })
+    }
+    return await h(req, res, action, ctx)
   } catch (e) {
+    const { status, message } = httpError(e)
     console.error(`[api/${raw}]`, e)
-    return fail(res, 500, (e as Error).message)
+    return fail(res, status, message)
   }
 }
 

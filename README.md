@@ -1,6 +1,6 @@
 # Omni TotalStack MSP
 
-**The all-in-one command center for managed service providers.** It's built for a first-time MSP owner and a first-time technician, and it's designed to scale to enterprise.
+**The all-in-one command center for managed service providers, sold as a white-label SaaS.** MSPs buy a plan at `/`, and their own branded workspace, website and client portal go live the moment payment clears. It's built for a first-time MSP owner and a first-time technician, and it's designed to scale to enterprise.
 
 The web app has two sides:
 
@@ -20,17 +20,21 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-- `/` shows the public landing page.
+- `/` is the Omni sales site for MSP owners, with pricing and signup at `/signup`.
+- `/m/demo` is a sample MSP's branded website, and `/m/demo/portal` is its client portal.
 - `/login` opens the MSP sign-in. Any email works in demo mode. On first sign-in you get the **setup wizard**, then the **guided tour**.
-- `/portal` opens the client portal.
-- `/platform` shows SaaS pricing for other MSP owners (Free Forever, Unlimited, Business, Enterprise).
+- `/app/billing`, `/app/team` and `/app/owner` (platform owner only) cover plans, invites and every MSP on the platform.
+
+## Going live
+
+Follow **[`docs/LAUNCH_CHECKLIST.md`](docs/LAUNCH_CHECKLIST.md)**. It covers Supabase, Stripe, Resend, Vercel, domains and your free owner account.
 
 ## Deploy (Vercel + Supabase)
 
 1. Push this repo to GitHub, then **Import** it in Vercel. The framework (Vite) is auto-detected.
 2. Create a Supabase project and run `supabase/migrations/0001_init.sql` in the SQL editor.
 3. Copy `.env.example` into Vercel → Settings → Environment Variables and fill in what you have.
-4. Redeploy. Vercel sets up the cron jobs automatically: the weekly client update email runs Monday 8 AM ET, and the overdue/expiry checks run daily.
+4. Redeploy. Vercel sets up the cron jobs automatically: each MSP's weekly client update email goes out on the day they chose, and the daily job handles overdue invoices, expiring contracts and non-payment lockouts.
 
 The full step-by-step is in [`docs/SETUP.md`](docs/SETUP.md). Per-vendor keys are covered in [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md).
 

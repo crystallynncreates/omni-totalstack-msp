@@ -7,13 +7,13 @@ const d = (n: number) => iso(addDays(new Date(), n))
 const dd = (n: number) => isoDate(addDays(new Date(), n))
 
 export const defaultCompany: T.Company = {
-  name: 'Omni TotalStack MSP',
-  legalName: 'Omni TotalStack MSP LLC',
+  name: 'Peachtree IT Solutions',
+  legalName: 'Peachtree IT Solutions LLC',
   address: '100 Main Street, Suite 200',
   city: 'Atlanta', state: 'GA', zip: '30303',
   phone: '(555) 010-2000',
-  email: 'hello@omnitotalstack.com',
-  website: 'omnitotalstack.com',
+  email: 'hello@peachtreeit.example',
+  website: 'peachtreeit.example',
   accent: 'blue',
   taxRate: 7,
   paymentTermsDays: 30,
@@ -146,11 +146,11 @@ export const payments: T.Payment[] = [
 ]
 
 export const employees: T.Employee[] = [
-  { id: 'e1', name: 'Crystal (Owner)', email: 'owner@omnitotalstack.com', role: 'Owner / vCIO', appRole: 'owner', type: 'W2', rate: 0, hoursThisPeriod: 72, ptoBalance: 0, directDeposit: 'active', startDate: dd(-500), certifications: ['CompTIA Security+'], w4OnFile: true, i9OnFile: true },
-  { id: 'e2', name: 'Marcus Lee', email: 'marcus@omnitotalstack.com', role: 'Tier 2 Technician', appRole: 'technician', type: 'W2', rate: 32, hoursThisPeriod: 76.5, ptoBalance: 36, directDeposit: 'active', startDate: dd(-300), certifications: ['Network+', 'Huntress Certified'], w4OnFile: true, i9OnFile: true },
-  { id: 'e3', name: 'Dana Ortiz', email: 'dana@omnitotalstack.com', role: 'Tier 1 Technician', appRole: 'technician', type: 'W2', rate: 25, hoursThisPeriod: 80, ptoBalance: 22, directDeposit: 'pending', startDate: dd(-45), certifications: ['A+'], w4OnFile: true, i9OnFile: false },
+  { id: 'e1', name: 'Jordan Reyes (Owner)', email: 'jordan@peachtreeit.example', role: 'Owner / vCIO', appRole: 'owner', type: 'W2', rate: 0, hoursThisPeriod: 72, ptoBalance: 0, directDeposit: 'active', startDate: dd(-500), certifications: ['CompTIA Security+'], w4OnFile: true, i9OnFile: true },
+  { id: 'e2', name: 'Marcus Lee', email: 'marcus@peachtreeit.example', role: 'Tier 2 Technician', appRole: 'technician', type: 'W2', rate: 32, hoursThisPeriod: 76.5, ptoBalance: 36, directDeposit: 'active', startDate: dd(-300), certifications: ['Network+', 'Huntress Certified'], w4OnFile: true, i9OnFile: true },
+  { id: 'e3', name: 'Dana Ortiz', email: 'dana@peachtreeit.example', role: 'Tier 1 Technician', appRole: 'technician', type: 'W2', rate: 25, hoursThisPeriod: 80, ptoBalance: 22, directDeposit: 'pending', startDate: dd(-45), certifications: ['A+'], w4OnFile: true, i9OnFile: false },
   { id: 'e4', name: 'Sam Patel', email: 'sam@cabling.example', role: 'Cabling Contractor', appRole: 'technician', type: '1099', rate: 55, hoursThisPeriod: 18, ptoBalance: 0, directDeposit: 'active', startDate: dd(-120), certifications: ['BICSI Installer'], w4OnFile: false, i9OnFile: false },
-  { id: 'e5', name: 'Rita Gomez', email: 'rita@omnitotalstack.com', role: 'Bookkeeper (part-time)', appRole: 'finance', type: '1099', rate: 40, hoursThisPeriod: 12, ptoBalance: 0, directDeposit: 'active', startDate: dd(-200), certifications: ['QuickBooks ProAdvisor'], w4OnFile: false, i9OnFile: false },
+  { id: 'e5', name: 'Rita Gomez', email: 'rita@peachtreeit.example', role: 'Bookkeeper (part-time)', appRole: 'finance', type: '1099', rate: 40, hoursThisPeriod: 12, ptoBalance: 0, directDeposit: 'active', startDate: dd(-200), certifications: ['QuickBooks ProAdvisor'], w4OnFile: false, i9OnFile: false },
 ]
 
 export const expenses: T.Expense[] = [
@@ -219,5 +219,6 @@ export const scans: T.DiscoveryScan[] = [
 ]
 
 export const releases = [
+  { version: '1.1.0', date: dd(0), title: 'Omni goes multi-company', items: ['Every MSP gets its own branded workspace, website and client portal', 'Plan & Billing: upgrade, downgrade and update your card (Stripe)', 'Team & Client Logins: invite technicians and give clients portal access', 'Website & domain: your own address or custom domain (Business+)', 'Workspaces pause automatically 7 days after a failed payment and reactivate the moment you pay'], tourTargets: ['nav-billing', 'nav-team', 'nav-admin'] },
   { version: '1.0.0', date: dd(0), title: 'Omni TotalStack MSP launch', items: ['Business Suite: clients, documents, proposals (3 options), RFS PDFs', 'Management Hub: sites, outages, contracts with red expiry alerts', '15-day patch soak policy + weekly client update emails', 'Network discovery agent + import', 'Finance: QuickBooks panel, payroll, drag-and-drop invoice builder, payments, non-payment notices', 'Landing page with lead capture, AI voice calls and booking'], tourTargets: ['nav-clients', 'nav-proposals', 'nav-patching', 'nav-finance'] },
 ]

@@ -1,5 +1,5 @@
 // Network Discovery: run the Omni Agent at a site (or import its results) to find every device on the network.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Radar, Upload, Download, Play, PlusCircle, ShieldAlert, Terminal } from 'lucide-react'
 import { useStore, clientName } from '../lib/store'
 import type { DiscoveredHost, DiscoveryScan, Device } from '../lib/types'
@@ -32,6 +32,8 @@ export default function Discovery() {
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState(0)
   const [scan, setScan] = useState<DiscoveryScan | null>(s.scans[0] ?? null)
+  const [agentToken, setAgentToken] = useState('YOUR_AGENT_TOKEN')
+  useEffect(() => { if (s.session && ['owner', 'admin'].includes(s.session.role)) api<{ token: string }>('discovery/token', {}).then((r) => r.ok && r.data && setAgentToken(r.data.token)) }, [s.session])
 
   const run = async () => {
     if (!site) return
@@ -116,7 +118,7 @@ export default function Discovery() {
             <ol className="list-decimal space-y-3 pl-5 text-sm">
               <li>Download the agent onto any always-on computer at the client site (Windows, Mac or Linux with Python 3).<div className="mt-2"><a className="btn-primary" href={`${import.meta.env.BASE_URL}agent/omni_scan.py`} download><Download size={15} /> Download omni_scan.py</a></div></li>
               <li>Run a one-time scan and save the results:<pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-xs">python omni_scan.py --range 192.168.1.0/24 --out results.json</pre>Then use <b>Import agent results</b> on the Scan tab.</li>
-              <li>Or connect it to Omni for automatic scans (every 24h + on demand):<pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-xs">python omni_scan.py --range 192.168.1.0/24 \{'\n'}  --post https://YOUR-OMNI-DOMAIN/api/discovery/ingest \{'\n'}  --site {siteId} --token YOUR_AGENT_TOKEN</pre></li>
+              <li>Or connect it to Omni for automatic scans (every 24h + on demand):<pre className="mt-2 overflow-x-auto rounded-lg bg-ink/5 p-2 font-mono text-xs">python omni_scan.py --range 192.168.1.0/24 \{'\n'}  --post {window.location.origin}/api/discovery/ingest \{'\n'}  --site {siteId} --token {agentToken}</pre></li>
             </ol>
             <p className="mt-3 text-xs text-muted">Only scan networks you manage and have written permission to scan (your MSA covers this for clients).</p>
           </Card>

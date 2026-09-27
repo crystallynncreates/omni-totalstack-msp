@@ -1,16 +1,16 @@
 // RMM adapter. Implemented: NinjaOne (OAuth client credentials) and Atera (API key). Others: add a case below.
-import { body, demo, fail, ok, secret, type Req, type Res } from '../_lib/util'
+import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
 
 async function ninjaToken(base: string, id: string, sec: string) {
   const r = await fetch(`${base}/ws/oauth/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: sec, scope: 'monitoring management control' }) })
   const j = await r.json(); if (!r.ok) throw new Error(j.error_description || 'NinjaOne auth failed'); return j.access_token as string
 }
 
-export default async function rmm(req: Req, res: Res, action: string) {
-  const vendor = ((await secret('rmm', 'vendor', 'RMM_VENDOR')) || 'ninjaone').toLowerCase()
-  const base = (await secret('rmm', 'baseUrl', 'RMM_BASE_URL')) || 'https://app.ninjarmm.com'
-  const id = await secret('rmm', 'clientId', 'RMM_CLIENT_ID')
-  const sec = await secret('rmm', 'clientSecret', 'RMM_CLIENT_SECRET')
+export default async function rmm(req: Req, res: Res, action: string, ctx: Ctx | null) {
+  const vendor = ((await secret(ctx?.orgId ?? null, 'rmm', 'vendor', 'RMM_VENDOR')) || 'ninjaone').toLowerCase()
+  const base = (await secret(ctx?.orgId ?? null, 'rmm', 'baseUrl', 'RMM_BASE_URL')) || 'https://app.ninjarmm.com'
+  const id = await secret(ctx?.orgId ?? null, 'rmm', 'clientId', 'RMM_CLIENT_ID')
+  const sec = await secret(ctx?.orgId ?? null, 'rmm', 'clientSecret', 'RMM_CLIENT_SECRET')
   if (!sec) return demo(res, 'RMM')
   const b = req.method === 'POST' ? await body<{ deviceId?: string; kb?: string; script?: { name: string; body: string; lang: string } }>(req) : {}
 

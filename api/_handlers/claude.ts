@@ -1,9 +1,12 @@
-// Claude (Anthropic Messages API). The API key stays on the server.
-import { body, demo, env, fail, ok, secret, type Req, type Res } from '../_lib/util'
+// Claude (Anthropic Messages API). Omni provides AI to Business/Enterprise workspaces from the platform key;
+// an MSP may also connect its own Anthropic key.
+import { body, demo, env, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { hasFeature } from '../../shared/plans'
 
-export default async function claude(req: Req, res: Res) {
+export default async function claude(req: Req, res: Res, _a: string, ctx: Ctx | null) {
   if (req.method !== 'POST') return fail(res, 405, 'POST only')
-  const key = await secret('claude', 'apiKey', 'ANTHROPIC_API_KEY')
+  if (ctx && !hasFeature(ctx.org.plan, 'ai_assistant', ctx.org.comped)) return fail(res, 402, 'The Claude AI assistant is included in the Business plan and up.')
+  const key = await secret(ctx?.orgId ?? null, 'claude', 'apiKey', 'ANTHROPIC_API_KEY')
   if (!key) return demo(res, 'Claude')
   const { prompt, system } = await body<{ prompt: string; system?: string }>(req)
   if (!prompt) return fail(res, 400, 'prompt required')

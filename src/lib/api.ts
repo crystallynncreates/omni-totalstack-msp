@@ -5,12 +5,15 @@
 export interface ApiResult<T = unknown> { ok: boolean; demo?: boolean; data?: T; error?: string }
 
 import { supabase } from './supabase'
+import { useStore } from './store'
 
 export async function api<T = unknown>(path: string, body?: unknown, method = body ? 'POST' : 'GET'): Promise<ApiResult<T>> {
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     const session = supabase ? (await supabase.auth.getSession()).data.session : null
     if (session) headers.Authorization = `Bearer ${session.access_token}`
+    const org = useStore.getState().session?.orgId
+    if (org) headers['x-org-id'] = org
     const res = await fetch(`/api/${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined })
     const ct = res.headers.get('content-type') || ''
     if (!ct.includes('application/json')) return { ok: false, demo: true, error: 'API not deployed (running locally in demo mode)' }

@@ -1,10 +1,10 @@
 // UniFi Site Manager API (https://developer.ui.com/site-manager-api/): sites, hosts, devices → outage detection.
-import { db, demo, fail, ok, secret, type Req, type Res } from '../_lib/util'
+import { demo, notify, records, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
 
 const u = async (key: string, path: string) => { const r = await fetch(`https://api.ui.com/v1${path}`, { headers: { 'X-API-KEY': key, Accept: 'application/json' } }); if (!r.ok) throw new Error(`UniFi ${path}: ${r.status}`); return r.json() }
 
-export default async function unifi(req: Req, res: Res, action: string) {
-  const key = await secret('unifi', 'apiKey', 'UNIFI_API_KEY')
+export default async function unifi(req: Req, res: Res, action: string, ctx: Ctx | null) {
+  const key = await secret(ctx?.orgId ?? null, 'unifi', 'apiKey', 'UNIFI_API_KEY')
   if (!key) return demo(res, 'UniFi')
   if (action === 'sites') {
     const [sites, hosts] = await Promise.all([u(key, '/sites'), u(key, '/hosts')])
@@ -16,8 +16,17 @@ export default async function unifi(req: Req, res: Res, action: string) {
       const status = hostState && hostState !== 'connected' ? 'down' : offline > 0 ? 'degraded' : 'online'
       return { unifiSiteId: s.siteId, name: s.meta?.desc || s.meta?.name, status, uptime30d: s.statistics?.percentages?.wanUptime ?? null, isp: s.statistics?.ispInfo?.name }
     })
-    const sb = db()
-    if (sb) for (const s of out) await sb.from('sites').update({ status: s.status, uptime_30d: s.uptime30d, last_check: new Date().toISOString() }).eq('unifi_site_id', s.unifiSiteId)
+    if (ctx) {
+      type S = { id: string; name: string; unifiSiteId?: string; status: string; outages: { id: string; start: string; end?: string; cause: string }[] }
+      for (const site of await records<S>(ctx.orgId, 'sites')) {
+        const u = out.find((x: { unifiSiteId: string }) => x.unifiSiteId === site.unifiSiteId)
+        if (!u) continue
+        const outages = [...(site.outages || [])]
+        if (u.status === 'down' && site.status !== 'down') { outages.unshift({ id: 'o' + Date.now(), start: new Date().toISOString(), cause: 'Gateway offline (UniFi)' }); await notify(ctx.orgId, 'bad', `${site.name} is DOWN`, '/app/infrastructure') }
+        if (u.status !== 'down' && site.status === 'down') outages.forEach((o) => { if (!o.end) o.end = new Date().toISOString() })
+        await putRecord(ctx.orgId, 'sites', { ...site, status: u.status, uptime30d: u.uptime30d ?? (site as unknown as { uptime30d: number }).uptime30d, lastCheck: new Date().toISOString(), outages })
+      }
+    }
     return ok(res, { sites: out })
   }
   if (action === 'devices') return ok(res, await u(key, '/devices'))

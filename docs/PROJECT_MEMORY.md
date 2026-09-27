@@ -5,7 +5,7 @@ This file is the single source of truth for **what was asked, what was decided a
 - **Owner:** Crystal (crystallynncreates)
 - **Repo:** `github.com/crystallynncreates/omni-totalstack-msp`
 - **Started:** 2026-09-27
-- **Current version:** 1.0.0
+- **Current version:** 1.1.0 (multi-company SaaS)
 
 ## 1. Vision
 
@@ -41,6 +41,27 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 | **Tutorial on first login**, plus tours for system and site updates | `components/SetupWizard.tsx`, `components/Tour.tsx` (`Tour`, `WhatsNew`); version gate in `Layout.tsx` via `APP_VERSION` |
 | All files on GitHub; accessible everywhere | This repo |
 
+## 2b. v1.1: Omni sold to other MSPs (requested 2026-09-27)
+
+| Requirement | Implemented in |
+|---|---|
+| Public site that **targets MSP owners** and sells Omni | `pages/OmniHome.tsx` at `/` (features, white-label, rollout steps, pricing, FAQ) |
+| Buy a plan → **rolled out once paid** | `pages/Signup.tsx` → `api/_handlers/signup.ts` (account + workspace + Stripe Checkout) → `api/_handlers/billing.ts` webhook sets `active` |
+| Each MSP and its clients get the **current site, under their own brand** | Per-workspace data (`records` table + RLS), `lib/cloud.ts` sync; MSP public site & portal `pages/TenantSite.tsx` at `/m/<slug>`, `<slug>.omnitotalstack.com` or a custom domain; `lib/brand.tsx` swaps name/logo/colors |
+| Setup wizard & Admin set name, logo, colors, address, rates, policies → used on landing, proposals, RFS, invoices, notices | `components/SetupWizard.tsx`, Admin → Company & branding, saved to `orgs.settings` |
+| **Shut down on non-payment** | Stripe webhook → `past_due` + 7-day grace → daily cron → `suspended`; DB function `org_live()` blocks all data access; app shows lock screen; public site/portal go offline |
+| **Free account for Crystal** | `PLATFORM_OWNER_EMAILS` → complimentary Enterprise (`comped`), plus **Omni Owner Console** (`pages/OwnerConsole.tsx`) |
+| Step 1: self-serve sign-up | `/signup`, slug availability check, reserved names |
+| Step 2: charge MSPs + enforce plan limits | `shared/plans.ts`; DB triggers for client/device/seat limits; `FeatureGate`; Plan & Billing page (upgrade/downgrade/portal) |
+| Step 3: data online, shared across devices & team | Supabase `records` + realtime; RLS by role (finance data hidden from technicians; clients see only their company) |
+| Step 4: each MSP's own integrations | `integration_secrets` per org (AES-GCM); only Claude, email and the QuickBooks app come from the platform; per-org agent tokens; cron runs per MSP |
+| Step 5: each MSP's own public pages & domain | `/m/<slug>`, wildcard subdomain, custom domain (Business+) via Admin → Website & domain (+ Vercel API) |
+| Step 6: invite team & clients | `pages/Team.tsx`, `api/_handlers/invites.ts`, `pages/AcceptInvite.tsx`; client users land in the branded portal |
+
+Pricing (editable in `shared/plans.ts`): Free Forever $0 (3 clients / 50 devices / 1 seat), Unlimited $99 (2 seats), Business $249 (10 seats, payroll, QBO, AI, QBR, custom domain), Enterprise $599 (unlimited). Enterprise was "custom" before; it's now a $599 self-serve price so it can be bought online. `FREE_PLAN_ENABLED=false` makes every plan paid.
+
+Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, suspension, grace period, plan limits, seat limits and billing-column protection were all tested with 8 scenarios, and all passed.
+
 ## 3. Key decisions
 
 - **Stack:** Vite + React + TS on Vercel, with Supabase for DB/Auth. Chosen to match Crystal's existing *calendi* setup.
@@ -56,6 +77,11 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 
 ## 4. Open items / next steps
 
+- [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
+- [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
+- [ ] Sign up with crystallynncreates@gmail.com for the free owner workspace.
+
+
 - [ ] Crystal to pick an RMM vendor (NinjaOne recommended) and supply API keys.
 - [ ] Create the Supabase project, run the migration and wire `lib/store.ts` to sync collections (currently localStorage). Tables are already in place.
 - [ ] Huntress partner account and API keys.
@@ -66,5 +92,7 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-27, v1.1.0:** Multi-company SaaS: MSP-facing sales site, self-serve signup with Stripe subscriptions, automatic rollout on payment, per-MSP branded website, portal and custom domain, 7-day grace then lockout on non-payment, plan limits, team and client invites, per-MSP integrations and cron, complimentary owner account with Owner Console, Supabase realtime sync, new multi-tenant schema with RLS.
 
 - **2026-09-27, v1.0.0:** Initial full build: landing, platform pricing, login, setup wizard, tour and what's-new, Command Center, Clients and client folders, leads and bookings, proposals (3 options + Huntress) with RFS/proposal PDFs, finance (QuickBooks panel, invoices, drag-drop builder, payments, health, non-payment notices), employees and payroll, procurement, IT strategy/QBR, sites and infrastructure, discovery and agent, patching with the 15-day soak and weekly email, Huntress security, tickets and SLA, projects and Gantt, inventory with QR, documentation and password rotation, tools, integrations hub (15 core + 123 marketplace), Claude assistant, admin, client portal, serverless API (15 adapters), Supabase schema with RLS, docs.

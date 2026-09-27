@@ -7,8 +7,11 @@ import { CATALOG } from '../lib/proposalEngine'
 import { releases } from '../lib/seed'
 import { Badge, Card, Field, PageHeader, Tabs, toast, cx } from '../components/ui'
 import { download, fmtDateTime, money } from '../lib/format'
+import { api } from '../lib/api'
+import { useCan } from '../components/Gate'
+import { Globe, Copy } from 'lucide-react'
 
-type Tab = 'company' | 'pricing' | 'roles' | 'sla' | 'audit' | 'releases' | 'workspace'
+type Tab = 'company' | 'website' | 'pricing' | 'roles' | 'sla' | 'audit' | 'releases' | 'workspace'
 const PERMS: [string, Record<string, boolean>][] = [
   ['Clients & documents', { owner: true, admin: true, technician: true, finance: true }],
   ['Proposals & RFS', { owner: true, admin: true, technician: false, finance: true }],
@@ -30,7 +33,7 @@ export default function Admin() {
   return (
     <div>
       <PageHeader title="Admin" subtitle={`Omni TotalStack MSP v${APP_VERSION}`} />
-      <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: 'company', label: 'Company & branding' }, { id: 'pricing', label: 'Billing rules & pricing' }, { id: 'roles', label: 'Users & roles' }, { id: 'sla', label: 'SLA templates' }, { id: 'audit', label: 'Audit log' }, { id: 'releases', label: 'Release notes' }, { id: 'workspace', label: 'Workspace' }]} />
+      <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: 'company', label: 'Company & branding' }, { id: 'website', label: 'Website & domain' }, { id: 'pricing', label: 'Billing rules & pricing' }, { id: 'roles', label: 'Users & roles' }, { id: 'sla', label: 'SLA templates' }, { id: 'audit', label: 'Audit log' }, { id: 'releases', label: 'Release notes' }, { id: 'workspace', label: 'Workspace' }]} />
       {tab === 'company' && (
         <Card>
           <div className="grid gap-3 md:grid-cols-3">
@@ -50,6 +53,7 @@ export default function Admin() {
           </div>
         </Card>
       )}
+      {tab === 'website' && <WebsiteDomain />}
       {tab === 'pricing' && (
         <div className="space-y-4">
           <Card title="Billing rules">
@@ -84,22 +88,66 @@ export default function Admin() {
       {tab === 'workspace' && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card title="Your data">
-            <p className="mb-3 text-sm text-muted">Currently using: <b>{s.ui.demoMode ? 'Demo data' : 'Your live workspace'}</b>. Connect Supabase (docs/SETUP.md) to store data in the cloud and share it across devices and team members.</p>
+            <p className="mb-3 text-sm text-muted">Currently using: <b>{s.session ? 'Your live cloud workspace (saved automatically, shared with your team)' : s.ui.demoMode ? 'Demo data in this browser' : 'Local workspace in this browser'}</b>.</p>
             <div className="flex flex-wrap gap-2">
               <button className="btn-ghost" onClick={exportData}><Download size={14} /> Export backup</button>
-              <label className="btn-ghost cursor-pointer"><Upload size={14} /> Restore backup<input type="file" accept=".json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>
+              {!s.session && <label className="btn-ghost cursor-pointer"><Upload size={14} /> Restore backup<input type="file" accept=".json" className="hidden" onChange={(e) => importData(e.target.files?.[0])} /></label>}
             </div>
           </Card>
           <Card title="Reset">
             <div className="flex flex-wrap gap-2">
-              <button className="btn-ghost" onClick={() => { s.resetDemo(); toast('Demo data restored') }}><RotateCcw size={14} /> Reload demo data</button>
-              <button className="btn-danger" onClick={() => { if (window.confirm('Remove all demo data and start with an empty workspace?')) { s.startFresh(); toast('Workspace cleared — add your first client!') } }}><Trash2 size={14} /> Start fresh (clear demo)</button>
+              {!s.session && <button className="btn-ghost" onClick={() => { s.resetDemo(); toast('Demo data restored') }}><RotateCcw size={14} /> Reload demo data</button>}
+              {!s.session && <button className="btn-danger" onClick={() => { s.startFresh(); toast('Workspace cleared — add your first client!') }}><Trash2 size={14} /> Start fresh (clear demo)</button>}
               <button className="btn-ghost" onClick={() => s.setUI({ setupDone: false })}>Re-run setup wizard</button>
             </div>
             <p className="mt-3 text-xs text-muted">API keys are managed in <Link to="/app/integrations" className="text-accent">Integrations</Link>.</p>
           </Card>
         </div>
       )}
+    </div>
+  )
+}
+
+const DOMAIN = (import.meta.env.VITE_PLATFORM_DOMAIN as string) || 'omnitotalstack.com'
+
+function WebsiteDomain() {
+  const s = useStore()
+  const can = useCan()
+  const slug = s.session?.slug ?? 'demo'
+  const [domain, setDomain] = useState(s.session?.customDomain ?? '')
+  const [dns, setDns] = useState<{ type: string; name: string; value: string } | null>(null)
+  const urls = [`${window.location.origin}/m/${slug}`, `https://${slug}.${DOMAIN}`]
+  const save = async () => {
+    const r = await api<{ dns: { type: string; name: string; value: string } }>('tenant/domain', { domain })
+    if (!r.ok) return toast(r.error || 'Could not save domain', 'bad')
+    setDns(r.data!.dns); toast('Domain saved — add the DNS record below')
+  }
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card title="Your public website & client portal" icon={<Globe size={16} />} help="These pages carry your logo, colors and business details from the Company & branding tab. Share the link on your business cards, Google profile and email signature.">
+        {urls.map((u) => (
+          <div key={u} className="mb-2 flex items-center gap-2 rounded-xl border border-line p-2 text-sm">
+            <a href={u} target="_blank" rel="noreferrer" className="flex-1 truncate text-accent">{u}</a>
+            <button className="rounded p-1 text-muted hover:text-accent" aria-label="Copy" onClick={() => navigator.clipboard?.writeText(u).then(() => toast('Copied')).catch(() => toast(u))}><Copy size={14} /></button>
+          </div>
+        ))}
+        <div className="mt-2 text-xs text-muted">Client portal: add <code>/portal</code> to either address.</div>
+      </Card>
+      <Card title="Connect your own domain">
+        {!can('custom_domain') ? <p className="text-sm text-muted">Custom domains (like <b>it.yourcompany.com</b>) are included in the Business plan and up. Upgrade under Plan & Billing.</p> : !s.session ? <p className="text-sm text-muted">Available in your live workspace.</p> : (
+          <div className="space-y-3">
+            <Field label="Domain" hint="A subdomain like it.yourcompany.com is easiest"><input className="input" placeholder="it.yourcompany.com" value={domain} onChange={(e) => setDomain(e.target.value)} /></Field>
+            <button className="btn-primary" onClick={save}>Connect domain</button>
+            {dns && (
+              <div className="rounded-xl bg-ink/5 p-3 text-sm">
+                <div className="mb-1 font-semibold">Add this record at your domain provider (GoDaddy, Cloudflare, etc.)</div>
+                <table className="table-base"><thead><tr><th>Type</th><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>{dns.type}</td><td>{dns.name}</td><td className="font-mono text-xs">{dns.value}</td></tr></tbody></table>
+                <p className="mt-2 text-xs text-muted">It usually starts working within an hour. HTTPS is set up automatically.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

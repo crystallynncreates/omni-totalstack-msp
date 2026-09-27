@@ -1,51 +1,68 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Lock } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowRight, PlayCircle } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { supabase } from '../lib/supabase'
-import Logo from '../components/Logo'
+import { bootstrap, cloudEnabled } from '../lib/cloud'
+import { OmniMark } from '../components/Logo'
 
 export default function Login() {
-  const setUI = useStore((s) => s.setUI)
+  const s = useStore()
   const nav = useNavigate()
-  const [email, setEmail] = useState('')
+  const [p] = useSearchParams()
+  const [email, setEmail] = useState(p.get('email') || '')
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const exploreDemo = () => {
+    useStore.setState({ session: null })
+    s.resetDemo()
+    s.setUI({ signedIn: true, demoMode: true })
+    nav('/app')
+  }
+
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr('')
-    if (supabase && email) {
-      setBusy(true)
-      const { error, data } = await supabase.auth.signInWithPassword({ email, password: pw })
-      setBusy(false)
-      if (error) return setErr(error.message)
-      setUI({ signedIn: true, userName: data.user?.user_metadata?.name || email.split('@')[0] })
-    } else {
-      setUI({ signedIn: true, userName: email ? email.split('@')[0] : 'Crystal' })
-    }
-    nav('/app')
+    if (!supabase) return exploreDemo()
+    setBusy(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pw })
+    if (error) { setBusy(false); return setErr(error.message === 'Invalid login credentials' ? 'That email and password don’t match. Try again or reset your password.' : error.message) }
+    const r = await bootstrap()
+    setBusy(false)
+    if (!r.ok) return setErr(r.reason === 'no_workspace' ? 'This account has no workspace yet. Start one from the pricing page, or ask your MSP for a new invitation.' : r.message || 'Could not load your workspace.')
+    nav(r.session.role === 'client' ? `/m/${r.session.slug}/portal` : '/app')
+  }
+
+  const reset = async () => {
+    if (!supabase || !email) return setErr('Enter your email above first.')
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login` })
+    setErr('Password reset email sent — check your inbox.')
   }
 
   return (
     <div className="grid min-h-full place-items-center p-4">
       <div className="glass w-full max-w-md p-8 animate-fadeUp">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Logo size={52} />
-          <h1 className="mt-3 h-display text-2xl">Omni TotalStack MSP</h1>
-          <p className="text-sm text-muted">Sign in to your Command Center</p>
+          <OmniMark size={52} />
+          <h1 className="mt-3 h-display text-2xl">Sign in</h1>
+          <p className="text-sm text-muted">Omni TotalStack MSP Command Center</p>
         </div>
+        {p.get('created') && <p className="mb-4 rounded-xl bg-ok/10 p-3 text-sm text-ok">{p.get('owner') ? 'Your complimentary owner workspace is ready.' : 'Your workspace is ready.'} Sign in to start the setup wizard.</p>}
         <form onSubmit={signIn} className="space-y-3">
-          <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input className="input" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required={cloudEnabled} />
+          <input className="input" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} required={cloudEnabled} />
           {err && <p className="text-sm text-bad">{err}</p>}
           <button className="btn-primary w-full py-3" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'} <ArrowRight size={16} /></button>
         </form>
-        {!supabase && <p className="mt-4 rounded-xl bg-accent/5 p-3 text-center text-xs text-muted">Demo mode: any email works (or leave blank). Connect Supabase in <code>.env</code> to enable real accounts — see docs/SETUP.md.</p>}
+        {cloudEnabled && <button onClick={reset} className="mt-2 w-full text-center text-xs text-muted hover:text-accent">Forgot password?</button>}
+        <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
+        <button onClick={exploreDemo} className="btn-ghost w-full"><PlayCircle size={16} /> Explore the demo workspace</button>
+        {!cloudEnabled && <p className="mt-4 rounded-xl bg-accent/5 p-3 text-center text-xs text-muted">Demo mode: the database isn't connected on this copy, so everything runs on sample data in your browser.</p>}
         <div className="mt-5 flex justify-between text-xs text-muted">
-          <Link to="/" className="hover:text-accent">← Back to website</Link>
-          <Link to="/portal" className="flex items-center gap-1 hover:text-accent"><Lock size={12} /> Client portal</Link>
+          <Link to="/" className="hover:text-accent">← Omni home</Link>
+          <Link to="/signup" className="hover:text-accent">New to Omni? Get started →</Link>
         </div>
       </div>
     </div>

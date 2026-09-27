@@ -1,9 +1,9 @@
 // Payroll adapter (Gusto). Omni prepares hours; the provider calculates taxes and runs direct deposit.
-import { body, demo, fail, ok, secret, type Req, type Res } from '../_lib/util'
+import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
 
-export default async function payroll(req: Req, res: Res, action: string) {
-  const token = await secret('gusto', 'token', 'PAYROLL_TOKEN')
-  const company = await secret('gusto', 'companyId', 'GUSTO_COMPANY_ID')
+export default async function payroll(req: Req, res: Res, action: string, ctx: Ctx | null) {
+  const token = await secret(ctx?.orgId ?? null, 'gusto', 'token', 'PAYROLL_TOKEN')
+  const company = await secret(ctx?.orgId ?? null, 'gusto', 'companyId', 'GUSTO_COMPANY_ID')
   if (!token || !company) return demo(res, 'Payroll provider')
   const g = async (path: string, init: RequestInit = {}) => { const r = await fetch(`https://api.gusto.com/v1${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers || {}) } }); if (!r.ok) throw new Error(`Gusto ${path}: ${r.status}`); return r.json() }
   if (action === 'employees') return ok(res, await g(`/companies/${company}/employees`))

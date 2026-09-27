@@ -133,7 +133,7 @@ function Payments() {
             <Toggle checked={c.autopay} onChange={(v) => { s.update('clients', c.id, { autopay: v }); toast(`Auto-pay ${v ? 'on' : 'off'} for ${c.name}`) }} />
           </div>
         ))}
-        <Link to="/portal" target="_blank" className="btn-ghost mt-3 w-full text-xs">Open client payment portal</Link>
+        <Link to={`/m/${s.session?.slug ?? 'demo'}/portal`} target="_blank" className="btn-ghost mt-3 w-full text-xs">Open client payment portal</Link>
       </Card>
     </div>
   )

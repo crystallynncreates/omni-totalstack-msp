@@ -10,6 +10,9 @@ import { invoicePdf } from '../lib/pdf'
 import { api } from '../lib/api'
 import type { Invoice, Payment } from '../lib/types'
 import { jsPDF } from 'jspdf'
+import { useBrand } from '../lib/brand'
+import { supabase } from '../lib/supabase'
+import { bootstrap, signOut } from '../lib/cloud'
 
 type Tab = 'home' | 'tickets' | 'billing' | 'projects' | 'assets' | 'documents'
 
@@ -17,21 +20,26 @@ export default function Portal() {
   const { clientId } = useParams()
   const s = useStore()
   const nav = useNavigate()
-  const client = s.clients.find((c) => c.id === clientId)
+  const { company, base, demo } = useBrand()
+  const session = s.session
+  // A signed-in client user always sees their own company; staff and the demo can pick one.
+  const lockedClient = session?.role === 'client' ? session.clientId : null
+  const client = s.clients.find((c) => c.id === (lockedClient || clientId))
   const [tab, setTab] = useState<Tab>('home')
   const [pay, setPay] = useState<Invoice | null>(null)
   const [newTicket, setNewTicket] = useState(false)
   const [t, setT] = useState<{ title: string; description: string; priority: 'P1' | 'P2' | 'P3' | 'P4' }>({ title: '', description: '', priority: 'P3' })
 
+  if (!demo && !session) return <PortalSignIn />
   if (!client) {
     return (
       <div className="grid min-h-full place-items-center p-4">
         <div className="glass w-full max-w-md p-8 text-center">
           <Logo size={48} />
-          <h1 className="mt-3 h-display text-2xl">{s.company.name} Client Portal</h1>
-          <p className="mb-5 text-sm text-muted">Sign in with the link from your welcome email. (Demo: pick a client below.)</p>
-          <div className="space-y-2">{s.clients.map((c) => <button key={c.id} onClick={() => nav(`/portal/${c.id}`)} className="btn-ghost w-full justify-between">{c.name}<span className="text-xs text-muted">{c.group}</span></button>)}</div>
-          <Link to="/" className="mt-4 block text-xs text-muted hover:text-accent">← Back to website</Link>
+          <h1 className="mt-3 h-display text-2xl">{company.name} Client Portal</h1>
+          <p className="mb-5 text-sm text-muted">{demo ? 'Demo: pick a client below.' : lockedClient ? 'Your account is not linked to a client yet. Please contact us.' : 'Preview the portal as one of your clients:'}</p>
+          {!lockedClient && <div className="space-y-2">{s.clients.map((c) => <button key={c.id} onClick={() => nav(`${base}/portal/${c.id}`)} className="btn-ghost w-full justify-between">{c.name}<span className="text-xs text-muted">{c.group}</span></button>)}</div>}
+          <Link to={base || '/'} className="mt-4 block text-xs text-muted hover:text-accent">← Back to website</Link>
         </div>
       </div>
     )
@@ -57,8 +65,8 @@ export default function Portal() {
     <div className="min-h-full">
       <header className="border-b border-line bg-panel/60 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Logo size={30} /><div><div className="h-display text-sm">{s.company.name}</div><div className="text-xs text-muted">Client portal · {client.name}</div></div>
-          <Link to="/portal" className="btn-ghost ml-auto"><LogOut size={15} /> Switch</Link>
+          <Logo size={30} /><div><div className="h-display text-sm">{company.name}</div><div className="text-xs text-muted">Client portal · {client.name}</div></div>
+          {lockedClient ? <button onClick={() => signOut()} className="btn-ghost ml-auto"><LogOut size={15} /> Sign out</button> : <Link to={`${base}/portal`} className="btn-ghost ml-auto"><LogOut size={15} /> Switch</Link>}
         </div>
       </header>
       <main className="mx-auto max-w-6xl p-4 md:p-6">
@@ -69,7 +77,7 @@ export default function Portal() {
             <Card title="Balance due"><div className={cx('h-display text-3xl', balance > 0 && 'text-warn')}>{money(balance, true)}</div><button className="btn-primary mt-3" onClick={() => setTab('billing')}>Pay now</button></Card>
             <Card title="Security protection" icon={<ShieldCheck size={16} />}><div className="flex items-center gap-4"><Ring value={protectedPct} tone={protectedPct === 100 ? 'ok' : 'warn'} /><p className="text-sm text-muted">Devices monitored 24/7 by the Huntress Security Operations Center.</p></div></Card>
             <Card title="Open requests"><div className="h-display text-3xl">{tickets.filter((x) => x.status !== 'resolved').length}</div><button className="btn-ghost mt-3" onClick={() => setNewTicket(true)}><Plus size={15} /> New request</button></Card>
-            <Card title="Your plan" className="md:col-span-3"><div className="flex flex-wrap items-center gap-3 text-sm"><Badge tone="info">{client.slaTier}</Badge> Auto-pay: <Toggle checked={client.autopay} onChange={(v) => { s.update('clients', client.id, { autopay: v }); toast(v ? 'Auto-pay turned on' : 'Auto-pay turned off') }} /> <span className="text-muted">Saved method: {client.paymentMethod ? client.paymentMethod.toUpperCase() : 'none'}</span></div></Card>
+            <Card title="Your plan" className="md:col-span-3"><div className="flex flex-wrap items-center gap-3 text-sm"><Badge tone="info">{client.slaTier}</Badge> Auto-pay: {lockedClient ? <Badge tone={client.autopay ? 'ok' : 'muted'}>{client.autopay ? 'On' : 'Off — turn on when you pay'}</Badge> : <Toggle checked={client.autopay} onChange={(v) => { s.update('clients', client.id, { autopay: v }); toast(v ? 'Auto-pay turned on' : 'Auto-pay turned off') }} />} <span className="text-muted">Saved method: {client.paymentMethod ? client.paymentMethod.toUpperCase() : 'none'}</span></div></Card>
           </div>
         )}
 
@@ -88,7 +96,7 @@ export default function Portal() {
                   <tr key={i.id}><td>{i.number}</td><td>{fmtDate(i.dueDate)}</td><td>{money(invoiceTotal(i), true)}</td>
                     <td><Badge tone={i.status === 'paid' ? 'ok' : isOverdue(i) ? 'bad' : 'warn'}>{i.status === 'paid' ? 'paid' : isOverdue(i) ? 'overdue' : 'open'}</Badge></td>
                     <td className="flex justify-end gap-1.5">
-                      <button className="btn-ghost px-2 py-1" onClick={() => invoicePdf(i, client, s.company)} title="Download PDF"><Download size={14} /></button>
+                      <button className="btn-ghost px-2 py-1" onClick={() => invoicePdf(i, client, company)} title="Download PDF"><Download size={14} /></button>
                       {i.status !== 'paid' && <button className="btn-primary px-3 py-1" onClick={() => setPay(i)}>Pay</button>}
                     </td></tr>
                 ))}</tbody></table>
@@ -98,7 +106,7 @@ export default function Portal() {
               {payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between border-b border-line/60 py-2 text-sm">
                   <div><div>{money(p.amount, true)}</div><div className="text-xs text-muted">{fmtDate(p.date)} · {p.method.toUpperCase()}</div></div>
-                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => receipt(p, s.invoices.find((i) => i.id === p.invoiceId)!, client.name, s.company.name)}><Download size={13} /> Receipt</button>
+                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => receipt(p, s.invoices.find((i) => i.id === p.invoiceId)!, client.name, company.name)}><Download size={13} /> Receipt</button>
                 </div>
               ))}
             </Card>
@@ -132,6 +140,7 @@ export default function Portal() {
 
 function PayModal({ invoice, onClose }: { invoice: Invoice; onClose: () => void }) {
   const s = useStore()
+  const { company, slug, demo } = useBrand()
   const client = s.clients.find((c) => c.id === invoice.clientId)!
   const [method, setMethod] = useState<Payment['method']>(client.paymentMethod || 'card')
   const [save, setSave] = useState(true)
@@ -141,8 +150,9 @@ function PayModal({ invoice, onClose }: { invoice: Invoice; onClose: () => void 
 
   const submit = async () => {
     setBusy(true)
-    const r = await api<{ url?: string }>('stripe/checkout', { invoiceId: invoice.id, amount, method, clientId: client.id, save, autopay })
+    const r = await api<{ url?: string }>('stripe/pay', { slug, invoiceId: invoice.id, method, save, autopay })
     if (r.ok && r.data?.url) { window.location.href = r.data.url; return }
+    if (!demo) { setBusy(false); return toast(r.error || 'Online payment is not available yet — please contact us.', 'warn') }
     // Demo mode: record the payment locally.
     const p: Payment = { id: uid('pay'), invoiceId: invoice.id, clientId: client.id, amount, date: iso(), method }
     s.add('payments', p)
@@ -167,7 +177,7 @@ function PayModal({ invoice, onClose }: { invoice: Invoice; onClose: () => void 
         ))}
         <Toggle checked={save} onChange={setSave} label="Save this payment method" />
         <div><Toggle checked={autopay} onChange={setAutopay} label="Turn on auto-pay for future invoices" /></div>
-        <p className="text-xs text-muted">Payments are processed securely by Stripe. {s.company.name} never sees your full card or bank number.</p>
+        <p className="text-xs text-muted">Payments are processed securely by Stripe. {company.name} never sees your full card or bank number.</p>
       </div>
     </Modal>
   )
@@ -180,4 +190,33 @@ function receipt(p: Payment, inv: Invoice, clientName: string, company: string) 
   ;[['Received from', clientName], ['Invoice', inv?.number ?? ''], ['Amount', money(p.amount, true)], ['Method', p.method.toUpperCase()], ['Date', fmtDate(p.date)], ['Receipt #', p.id.toUpperCase()]].forEach(([k, v], i) => { doc.text(`${k}:`, 40, 100 + i * 20); doc.text(v, 160, 100 + i * 20) })
   doc.text('Thank you for your payment!', 40, 240)
   doc.save(`Receipt-${inv?.number}.pdf`)
+}
+
+function PortalSignIn() {
+  const { company, base } = useBrand()
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(''); setBusy(true)
+    const { error } = await supabase!.auth.signInWithPassword({ email, password: pw })
+    if (error) { setBusy(false); return setErr(error.message) }
+    const r = await bootstrap()
+    setBusy(false)
+    if (!r.ok) setErr(r.message || 'This account does not have portal access yet.')
+  }
+  return (
+    <div className="grid min-h-full place-items-center p-4">
+      <form onSubmit={submit} className="glass w-full max-w-md space-y-3 p-8">
+        <div className="text-center"><Logo size={48} /><h1 className="mt-3 h-display text-2xl">{company.name}</h1><p className="text-sm text-muted">Client portal sign-in</p></div>
+        <input className="input" type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" type="password" required placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+        {err && <p className="text-sm text-bad">{err}</p>}
+        <button className="btn-primary w-full py-3" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        <p className="text-center text-xs text-muted">First time here? Open the invitation link in your email to set your password.</p>
+        <Link to={base || '/'} className="block text-center text-xs text-muted hover:text-accent">← Back to website</Link>
+      </form>
+    </div>
+  )
 }

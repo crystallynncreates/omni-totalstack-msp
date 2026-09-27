@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate, Link, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Magnet, FileSignature, Landmark, UserCog, Truck, Target, Building2, Radar, RefreshCw, ShieldCheck,
-  Ticket, FolderKanban, Boxes, BookOpen, Wrench, Plug, Bot, Settings, Search, Bell, Sun, Moon, CircleHelp, Sparkles, Menu, X, LogOut, ExternalLink,
+  Ticket, FolderKanban, Boxes, BookOpen, Wrench, Plug, Bot, Settings, Search, Bell, Sun, Moon, CircleHelp, Sparkles, Menu, X, LogOut, ExternalLink, CreditCard, UsersRound, Crown, Lock, AlertTriangle,
 } from 'lucide-react'
 import { useStore, APP_VERSION } from '../lib/store'
 import { cx, Toaster } from './ui'
@@ -10,6 +10,10 @@ import { Tour, WhatsNew } from './Tour'
 import SetupWizard from './SetupWizard'
 import { timeAgo } from '../lib/format'
 import Logo from './Logo'
+import { useCan } from './Gate'
+import { signOut } from '../lib/cloud'
+import { orgIsLive, PLANS, type Feature } from '../../shared/plans'
+import { daysUntil, fmtDate } from '../lib/format'
 
 export const NAV = [
   { group: 'Business Suite', items: [
@@ -18,9 +22,9 @@ export const NAV = [
     { to: '/app/leads', label: 'Leads & Bookings', icon: Magnet, tour: 'nav-leads' },
     { to: '/app/proposals', label: 'Proposals & RFS', icon: FileSignature, tour: 'nav-proposals' },
     { to: '/app/finance', label: 'Finance', icon: Landmark, tour: 'nav-finance' },
-    { to: '/app/employees', label: 'Employees & Payroll', icon: UserCog, tour: 'nav-employees' },
-    { to: '/app/procurement', label: 'Procurement', icon: Truck, tour: 'nav-procurement' },
-    { to: '/app/strategy', label: 'IT Strategy & QBR', icon: Target, tour: 'nav-strategy' },
+    { to: '/app/employees', label: 'Employees & Payroll', icon: UserCog, tour: 'nav-employees', feature: 'payroll' as Feature },
+    { to: '/app/procurement', label: 'Procurement', icon: Truck, tour: 'nav-procurement', feature: 'procurement' as Feature },
+    { to: '/app/strategy', label: 'IT Strategy & QBR', icon: Target, tour: 'nav-strategy', feature: 'qbr' as Feature },
   ] },
   { group: 'Management Hub', items: [
     { to: '/app/infrastructure', label: 'Sites & Infrastructure', icon: Building2, tour: 'nav-infrastructure' },
@@ -35,8 +39,10 @@ export const NAV = [
   ] },
   { group: 'System', items: [
     { to: '/app/integrations', label: 'Integrations', icon: Plug, tour: 'nav-integrations' },
-    { to: '/app/assistant', label: 'AI Assistant', icon: Bot, tour: 'nav-assistant' },
-    { to: '/app/admin', label: 'Admin', icon: Settings, tour: 'nav-admin' },
+    { to: '/app/assistant', label: 'AI Assistant', icon: Bot, tour: 'nav-assistant', feature: 'ai_assistant' as Feature },
+    { to: '/app/team', label: 'Team & Client Logins', icon: UsersRound, tour: 'nav-team' },
+    { to: '/app/billing', label: 'Plan & Billing', icon: CreditCard, tour: 'nav-billing' },
+    { to: '/app/admin', label: 'Admin & Branding', icon: Settings, tour: 'nav-admin' },
   ] },
 ]
 
@@ -102,8 +108,12 @@ function Notifications() {
   )
 }
 
+type NavItem = { to: string; label: string; icon: typeof Plug; tour: string; end?: boolean; feature?: Feature }
+
 export default function Layout() {
   const ui = useStore((s) => s.ui)
+  const session = useStore((s) => s.session)
+  const can = useCan()
   const company = useStore((s) => s.company)
   const setUI = useStore((s) => s.setUI)
   const [mobile, setMobile] = useState(false)
@@ -114,13 +124,18 @@ export default function Layout() {
 
   useEffect(() => setMobile(false), [loc.pathname])
   useEffect(() => {
-    if (!ui.signedIn) nav('/login')
-  }, [ui.signedIn, nav])
+    if (!ui.signedIn && !session) nav('/login')
+  }, [ui.signedIn, session, nav])
   useEffect(() => {
     // First login → setup wizard → tour. Later versions → "What's new".
     if (ui.setupDone && !ui.tourDone) setTour(true)
     else if (ui.setupDone && ui.tourDone && ui.lastSeenVersion !== APP_VERSION) setWhatsNew(true)
   }, [ui.setupDone, ui.tourDone, ui.lastSeenVersion])
+
+  if (session?.role === 'client') return <Navigate to={`/m/${session.slug}/portal`} replace />
+  const locked = !!session && !orgIsLive({ status: session.status, comped: session.comped, grace_until: session.graceUntil })
+  const graceDays = session?.status === 'past_due' && session.graceUntil ? Math.max(0, daysUntil(session.graceUntil)) : null
+  const doSignOut = async () => { if (session) await signOut(); setUI({ signedIn: false }); nav('/login') }
 
   return (
     <div className="flex min-h-full">
@@ -133,17 +148,21 @@ export default function Layout() {
           {NAV.map((g) => (
             <div key={g.group} className="mt-3">
               <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted">{g.group}</div>
-              {g.items.map((i) => (
+              {(g.items as NavItem[]).map((i) => (
                 <NavLink key={i.to} to={i.to} end={i.end} data-tour={i.tour} className={({ isActive }) => cx('group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition', isActive ? 'bg-gradient-to-r from-accent/20 to-accent2/10 font-medium text-ink shadow-glow' : 'text-muted hover:bg-ink/5 hover:text-ink')}>
                   <i.icon size={17} className="shrink-0" /> {i.label}
+                  {i.feature && !can(i.feature) && <Lock size={12} className="ml-auto text-muted" />}
                 </NavLink>
               ))}
+              {g.group === 'System' && session?.platformOwner && (
+                <NavLink to="/app/owner" className={({ isActive }) => cx('flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm', isActive ? 'bg-warn/15 font-medium text-warn' : 'text-warn/80 hover:bg-warn/10')}><Crown size={17} /> Omni Owner Console</NavLink>
+              )}
             </div>
           ))}
         </nav>
         <div className="border-t border-line p-3 text-xs text-muted">
-          <Link to="/" target="_blank" className="mb-2 flex items-center gap-1.5 hover:text-accent"><ExternalLink size={13} /> View public landing page</Link>
-          v{APP_VERSION} · {ui.demoMode ? 'Demo data' : 'Live workspace'}
+          <Link to={`/m/${session?.slug ?? 'demo'}`} target="_blank" className="mb-2 flex items-center gap-1.5 hover:text-accent"><ExternalLink size={13} /> View my public website</Link>
+          v{APP_VERSION} · {session ? `${PLANS[session.plan].name}${session.comped ? ' · complimentary' : ''}` : 'Demo data'}
         </div>
       </aside>
       {mobile && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setMobile(false)} />}
@@ -157,21 +176,41 @@ export default function Layout() {
             <button onClick={() => setTour(true)} className="rounded-xl p-2 hover:bg-ink/5" title="Take the tour" aria-label="Help tour" data-tour="help"><CircleHelp size={18} /></button>
             <button onClick={() => setUI({ theme: ui.theme === 'dark' ? 'light' : 'dark' })} className="rounded-xl p-2 hover:bg-ink/5" title="Light / dark" aria-label="Toggle theme">{ui.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
             <Notifications />
-            <button onClick={() => setUI({ signedIn: false })} className="rounded-xl p-2 hover:bg-ink/5" title="Sign out" aria-label="Sign out"><LogOut size={18} /></button>
+            <button onClick={doSignOut} className="rounded-xl p-2 hover:bg-ink/5" title="Sign out" aria-label="Sign out"><LogOut size={18} /></button>
           </div>
         </header>
-        {ui.demoMode && (
+        {graceDays !== null && !session?.comped && (
+          <div className="no-print flex flex-wrap items-center justify-center gap-2 border-b border-warn/40 bg-warn/10 px-4 py-2 text-center text-sm text-warn">
+            <AlertTriangle size={15} /> Your Omni payment didn't go through. Everything stays online for <b>{graceDays} more day{graceDays === 1 ? '' : 's'}</b> ({fmtDate(session!.graceUntil!)}), then your workspace, website and client portal pause.
+            <Link to="/app/billing" className="btn-primary px-3 py-1 text-xs">Update payment</Link>
+          </div>
+        )}
+        {!session && ui.demoMode && (
           <div className="no-print border-b border-accent/20 bg-accent/5 px-4 py-1.5 text-center text-xs text-muted">
             You're exploring with <b className="text-ink">demo data</b> — nothing here is real. Go to <Link className="text-accent underline" to="/app/admin">Admin → Workspace</Link> to start fresh with your own clients.
           </div>
         )}
-        <main className="mx-auto w-full max-w-[1500px] flex-1 p-4 md:p-6"><Outlet /></main>
+        <main className="mx-auto w-full max-w-[1500px] flex-1 p-4 md:p-6">{locked && loc.pathname !== '/app/billing' ? <Locked /> : <Outlet />}</main>
       </div>
 
-      {!ui.setupDone && <SetupWizard />}
+      {!ui.setupDone && !locked && (!session || session.role === 'owner') && <SetupWizard />}
       {tour && <Tour onDone={() => { setTour(false); setUI({ tourDone: true, lastSeenVersion: APP_VERSION }) }} />}
       {whatsNew && <WhatsNew onClose={() => { setWhatsNew(false); setUI({ lastSeenVersion: APP_VERSION }) }} onTour={() => { setWhatsNew(false); setUI({ lastSeenVersion: APP_VERSION }); setTour(true) }} />}
       <Toaster />
+    </div>
+  )
+}
+
+function Locked() {
+  const session = useStore((s) => s.session)
+  return (
+    <div className="grid min-h-[70vh] place-items-center">
+      <div className="glass max-w-lg p-8 text-center">
+        <div className="mx-auto w-fit rounded-2xl bg-bad/10 p-3 text-bad"><Lock /></div>
+        <h1 className="mt-3 h-display text-2xl">Your workspace is paused</h1>
+        <p className="mt-2 text-sm text-muted">We haven't received payment for your Omni TotalStack MSP subscription, so your Command Center, public website and client portal are offline. Your data is safe. Paying now reactivates everything instantly.</p>
+        {session && ['owner', 'admin'].includes(session.role) ? <Link to="/app/billing" className="btn-primary mt-5">Pay & reactivate</Link> : <p className="mt-4 text-sm">Please ask your workspace owner to update billing.</p>}
+      </div>
     </div>
   )
 }

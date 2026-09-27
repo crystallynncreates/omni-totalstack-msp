@@ -6,6 +6,7 @@ import {
   PhoneCall, CalendarCheck, Check, ArrowRight, Sun, Moon, Menu, X, Star, Bot, Lock,
 } from 'lucide-react'
 import { useStore } from '../lib/store'
+import { useBrand } from '../lib/brand'
 import { api } from '../lib/api'
 import { uid, iso, addDays, money } from '../lib/format'
 import { CATALOG } from '../lib/proposalEngine'
@@ -38,7 +39,7 @@ const PLANS = [
 const INTERESTS = ['Managed IT', 'Cybersecurity', 'Network & Wi-Fi', 'Microsoft 365', 'Backup', 'Compliance', 'Process Improvement', 'Business Health', 'Print Services', 'Hardware']
 
 export default function Landing() {
-  const company = useStore((s) => s.company)
+  const { company, base, slug, demo } = useBrand()
   const theme = useStore((s) => s.ui.theme)
   const setUI = useStore((s) => s.setUI)
   const add = useStore((s) => s.add)
@@ -51,9 +52,13 @@ export default function Landing() {
   const submitLead = async (e: React.FormEvent) => {
     e.preventDefault()
     const l = { id: uid('l'), ...lead, source: 'website' as const, status: 'new' as const, createdAt: iso() }
-    add('leads', l)
-    notify('info', `New website lead: ${lead.name} (${lead.company})`, '/app/leads')
-    await api('leads', l)
+    if (demo) {
+      add('leads', l)
+      notify('info', `New website lead: ${lead.name} (${lead.company})`, '/app/leads')
+    } else {
+      const r = await api('leads', { ...l, slug })
+      if (!r.ok) return toast(r.error || 'Something went wrong — please call us instead.', 'bad')
+    }
     setSent(true)
     toast('Thanks! We will be in touch within one business day.')
   }
@@ -69,8 +74,7 @@ export default function Landing() {
           </nav>
           <div className="ml-auto hidden items-center gap-2 md:flex">
             <button onClick={() => setUI({ theme: theme === 'dark' ? 'light' : 'dark' })} className="rounded-xl p-2 hover:bg-ink/5" aria-label="Theme">{theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}</button>
-            <Link to="/portal" className="btn-ghost">Client portal</Link>
-            <Link to="/login" className="btn-ghost">MSP login</Link>
+            <Link to={`${base}/portal`} className="btn-ghost">Client portal</Link>
             <button onClick={() => setCallOpen(true)} className="btn-primary"><PhoneCall size={15} /> Call me now</button>
           </div>
           <button className="ml-auto md:hidden" onClick={() => setMenu(!menu)} aria-label="Menu">{menu ? <X /> : <Menu />}</button>
@@ -78,7 +82,7 @@ export default function Landing() {
         {menu && (
           <div className="flex flex-col gap-2 border-t border-line px-4 py-3 text-sm md:hidden">
             <a href="#services" onClick={() => setMenu(false)}>Services</a><a href="#pricing" onClick={() => setMenu(false)}>Pricing</a><a href="#book" onClick={() => setMenu(false)}>Book a call</a>
-            <Link to="/portal">Client portal</Link><Link to="/login">MSP login</Link>
+            <Link to={`${base}/portal`}>Client portal</Link>
             <button onClick={() => setCallOpen(true)} className="btn-primary">Call me now</button>
           </div>
         )}
@@ -160,7 +164,7 @@ export default function Landing() {
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center text-sm text-muted">Servers, hardware and projects quoted separately. <Link to="/platform" className="text-accent underline">Are you an MSP? See the Omni platform →</Link></p>
+        <p className="mt-6 text-center text-sm text-muted">Servers, hardware and projects quoted separately.</p>
       </section>
 
       {/* Assessment + Booking */}
@@ -210,7 +214,8 @@ export default function Landing() {
       <footer className="border-t border-line py-10 text-center text-sm text-muted">
         <div className="mb-2 flex items-center justify-center gap-2"><Logo size={22} /> {company.legalName}</div>
         {company.address}, {company.city}, {company.state} {company.zip} · {company.phone} · {company.email}
-        <div className="mt-3"><Link to="/login" className="hover:text-accent">MSP login</Link> · <Link to="/portal" className="hover:text-accent">Client portal</Link> · <Link to="/platform" className="hover:text-accent">Omni platform for MSPs</Link></div>
+        <div className="mt-3"><Link to={`${base}/portal`} className="hover:text-accent">Client portal</Link> · <Link to="/login" className="hover:text-accent">Team sign-in</Link></div>
+        <div className="mt-2 text-xs">Powered by <Link to="/" className="hover:text-accent">Omni TotalStack MSP</Link></div>
       </footer>
 
       {/* Floating AI call button */}
@@ -252,6 +257,7 @@ function ServicesMap() {
 }
 
 function Booking() {
+  const { slug, demo } = useBrand()
   const add = useStore((s) => s.add)
   const notify = useStore((s) => s.notify)
   const days = useMemo(() => {
@@ -272,10 +278,14 @@ function Booking() {
     const [h, m] = slot.split(':').map(Number)
     const start = new Date(days[day]); start.setHours(h, m, 0, 0)
     const leadId = uid('l')
-    add('leads', { id: leadId, name: f.name, email: f.email, phone: f.phone, company: '', interest: [], message: f.topic, source: 'booking', status: 'new', createdAt: iso() })
-    add('appointments', { id: uid('a'), leadId, name: f.name, email: f.email, phone: f.phone, start: start.toISOString(), topic: f.topic, status: 'booked' })
-    notify('info', `New appointment booked: ${f.name} on ${start.toLocaleString()}`, '/app/leads')
-    await api('book', { ...f, start: start.toISOString() })
+    if (demo) {
+      add('leads', { id: leadId, name: f.name, email: f.email, phone: f.phone, company: '', interest: [], message: f.topic, source: 'booking', status: 'new', createdAt: iso() })
+      add('appointments', { id: uid('a'), leadId, name: f.name, email: f.email, phone: f.phone, start: start.toISOString(), topic: f.topic, status: 'booked' })
+      notify('info', `New appointment booked: ${f.name} on ${start.toLocaleString()}`, '/app/leads')
+    } else {
+      const r = await api('book', { ...f, slug, start: start.toISOString() })
+      if (!r.ok) return toast(r.error || 'Booking failed — please call us.', 'bad')
+    }
     setDone(true)
   }
 
@@ -316,6 +326,7 @@ function Booking() {
 }
 
 function AICallModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { slug, demo } = useBrand()
   const add = useStore((s) => s.add)
   const notify = useStore((s) => s.notify)
   const [f, setF] = useState({ name: '', phone: '', company: '', consent: false })
@@ -324,9 +335,11 @@ function AICallModal({ open, onClose }: { open: boolean; onClose: () => void }) 
     e.preventDefault()
     setState('calling')
     const lead = { id: uid('l'), name: f.name, email: '', phone: f.phone, company: f.company, interest: [], message: 'Requested an AI call from the website', source: 'ai_call' as const, status: 'new' as const, createdAt: iso(), callRequested: true }
-    add('leads', lead)
-    notify('info', `AI call requested by ${f.name} (${f.phone})`, '/app/leads')
-    const r = await api('voice/call', { name: f.name, phone: f.phone, company: f.company, leadId: lead.id })
+    if (demo) {
+      add('leads', lead)
+      notify('info', `AI call requested by ${f.name} (${f.phone})`, '/app/leads')
+    } else await api('leads', { ...lead, slug })
+    const r = await api('voice/call', { name: f.name, phone: f.phone, company: f.company, slug })
     setState(r.ok ? 'calling' : 'queued')
   }
   return (

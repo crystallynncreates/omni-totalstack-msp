@@ -9,3 +9,6 @@ Conventions:
 - Huntress must remain mandatory in every proposal option (`mandatory: true`).
 - Patch deployment must respect `patchStage()`. Never bypass the soak policy in code.
 - Verify with `npx tsc -b && npx tsc -p api/tsconfig.json && npm run build`.
+- Multi-tenant: all workspace data is in `records` (org_id, collection, id, data) with RLS; never add a table without `org_id` + RLS. Billing fields on `orgs` are server-only.
+- Plans/limits/features live in `shared/plans.ts` (used by both app and API) and are also enforced by DB triggers.
+- An MSP's integration keys must never fall back to platform env vars (see `PLATFORM_PROVIDED` in `api/_lib/util.ts`).

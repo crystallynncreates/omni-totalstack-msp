@@ -70,7 +70,7 @@ export default function ClientDetail() {
         </div>
         <div className="flex flex-wrap gap-2">
           <a href={c.huntressOrgId ? `${s.integrations.huntress.config.portalUrl || s.company.huntressPortalUrl}` : s.company.huntressPortalUrl} target="_blank" rel="noreferrer" className="btn-ghost"><ShieldCheck size={15} className="text-accent2" /> Huntress account <ExternalLink size={12} /></a>
-          <Link to={`/portal/${c.id}`} target="_blank" className="btn-ghost">Client portal <ExternalLink size={12} /></Link>
+          <Link to={`/m/${s.session?.slug ?? 'demo'}/portal/${c.id}`} target="_blank" className="btn-ghost">Client portal <ExternalLink size={12} /></Link>
           <Link to={`/app/proposals/new?client=${c.id}`} className="btn-primary"><FileSignature size={15} /> New proposal</Link>
           <button onClick={() => setEdit(true)} className="btn-ghost"><Pencil size={14} /></button>
         </div>

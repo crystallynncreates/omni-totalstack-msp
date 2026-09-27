@@ -28,7 +28,7 @@ export default function SetupWizard() {
 
   const finish = () => {
     s.setCompany(c)
-    if (dataMode === 'fresh') s.startFresh()
+    if (!s.session && dataMode === 'fresh') s.startFresh()
     if (client.name) s.add('clients', { id: uid('c'), name: client.name, group: client.group, status: 'onboarding', primaryContact: { name: client.contact, email: client.email, phone: client.phone }, address: '', ownerName: client.name, ownerAddress: '', slaTier: 'Essential', mrr: 0, autopay: false, notes: '', createdAt: iso() })
     if (tech.name) s.add('employees', { id: uid('e'), name: tech.name, email: tech.email, role: 'Technician', appRole: 'technician', type: 'W2', rate: 25, hoursThisPeriod: 0, ptoBalance: 0, directDeposit: 'none', startDate: isoDate(), certifications: [], w4OnFile: false, i9OnFile: false })
     s.log('Completed first-login setup wizard')
@@ -59,14 +59,14 @@ export default function SetupWizard() {
                 <div className="mx-auto mb-4 w-fit"><Logo size={64} /></div>
                 <h2 className="h-display text-2xl">Welcome to <span className="gradient-text">Omni TotalStack MSP</span></h2>
                 <p className="mx-auto mt-2 max-w-md text-sm text-muted">This 2-minute setup personalizes your command center. You can change anything later in Admin. No technical knowledge needed.</p>
-                <div className="mx-auto mt-6 grid max-w-md gap-3 text-left sm:grid-cols-2">
+                {s.session ? <p className="mx-auto mt-6 max-w-md rounded-xl bg-accent/5 p-3 text-sm text-muted">Your workspace is empty and ready for your real clients. Everything you set here shows on your website, client portal, proposals, invoices and emails.</p> : <div className="mx-auto mt-6 grid max-w-md gap-3 text-left sm:grid-cols-2">
                   {(['demo', 'fresh'] as const).map((m) => (
                     <button key={m} onClick={() => setDataMode(m)} className={cx('rounded-xl border p-4 text-sm', dataMode === m ? 'border-accent bg-accent/10' : 'border-line')}>
                       <div className="font-semibold">{m === 'demo' ? 'Explore with demo data' : 'Start fresh'}</div>
                       <div className="mt-1 text-xs text-muted">{m === 'demo' ? 'Sample clients, sites and invoices so you can learn safely.' : 'An empty workspace for your real business.'}</div>
                     </button>
                   ))}
-                </div>
+                </div>}
               </div>
             )}
             {step === 1 && (
