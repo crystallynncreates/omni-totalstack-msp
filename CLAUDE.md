@@ -1,0 +1,11 @@
+# CLAUDE.md — Omni TotalStack MSP
+
+Read `docs/PROJECT_MEMORY.md` first. It's the full requirements, decisions, open items and change log. Update it (and bump `APP_VERSION` in `src/lib/store.ts` plus add an entry to `releases` in `src/lib/seed.ts`) whenever you ship a change, so the in-app "What's new" tour stays accurate.
+
+Conventions:
+- The UI must stay novice-friendly: every page gets a `PageHeader` `help` line, empty states explain the next step, and nothing breaks without API keys.
+- Types live in `src/lib/types.ts` and mirror `supabase/migrations/*.sql` (snake_case in DB, camelCase in app).
+- New API endpoints go in `api/_handlers/<name>.ts` and get registered in `api/index.ts`. Return `demo(res, 'X')` when not configured.
+- Huntress must remain mandatory in every proposal option (`mandatory: true`).
+- Patch deployment must respect `patchStage()`. Never bypass the soak policy in code.
+- Verify with `npx tsc -b && npx tsc -p api/tsconfig.json && npm run build`.

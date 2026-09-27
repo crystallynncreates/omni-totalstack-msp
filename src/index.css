@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Omni design tokens ---------- */
+:root {
+  --bg: 244 246 250;
+  --panel: 255 255 255;
+  --line: 222 226 236;
+  --ink: 17 20 28;
+  --muted: 96 104 122;
+  --ok: 22 163 74;
+  --warn: 217 119 6;
+  --bad: 220 38 38;
+  --accent: 37 99 235;
+  --accent2: 147 51 234;
+  --glass: 255 255 255;
+  --glass-a: .78;
+}
+.dark {
+  --bg: 8 9 13;
+  --panel: 18 20 27;
+  --line: 40 44 56;
+  --ink: 236 239 246;
+  --muted: 146 153 171;
+  --ok: 34 197 94;
+  --warn: 245 158 11;
+  --bad: 248 72 72;
+  --accent: 56 189 248;
+  --accent2: 168 85 247;
+  --glass: 22 25 34;
+  --glass-a: .62;
+}
+[data-accent='purple'] { --accent: 168 85 247; --accent2: 56 189 248; }
+[data-accent='gold'] { --accent: 234 179 8; --accent2: 249 115 22; }
+.dark[data-accent='purple'] { --accent: 192 132 252; }
+.dark[data-accent='gold'] { --accent: 250 204 21; }
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-bg text-ink font-sans antialiased;
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, rgb(var(--accent) / .10), transparent 60%),
+    radial-gradient(700px 400px at -10% 110%, rgb(var(--accent2) / .08), transparent 60%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  .glass {
+    background: rgb(var(--glass) / var(--glass-a));
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    @apply border border-line/70 rounded-2xl shadow-soft;
+  }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none; }
+  .btn-primary { @apply btn text-white bg-gradient-to-r from-accent to-accent2 hover:shadow-glow; }
+  .dark .btn-primary { @apply text-black; }
+  .btn-ghost { @apply btn text-ink hover:bg-ink/5 border border-line; }
+  .btn-danger { @apply btn text-white bg-bad hover:opacity-90; }
+  .input { @apply w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink placeholder:text-muted/70 outline-none focus:border-accent focus:ring-2 focus:ring-accent/25; }
+  .label { @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium; }
+  .h-display { @apply font-display font-semibold tracking-tight; }
+  .table-base { @apply w-full text-sm; }
+  .table-base th { @apply px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted border-b border-line; }
+  .table-base td { @apply px-3 py-2.5 border-b border-line/60 align-middle; }
+  .table-base tr:hover td { @apply bg-ink/[.02]; }
+  .gradient-text { @apply bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--line)); border-radius: 8px; border: 2px solid rgb(var(--bg)); }
+
+@media print { .no-print { display: none !important; } }
