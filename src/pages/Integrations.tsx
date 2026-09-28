@@ -7,6 +7,7 @@ import { Badge, Card, Field, Modal, PageHeader, toast, cx } from '../components/
 import { api } from '../lib/api'
 import { iso, timeAgo } from '../lib/format'
 import { useCan } from '../components/Gate'
+import { STARTER_INTEGRATIONS } from '../../shared/plans'
 import { Link } from 'react-router-dom'
 import type { IntegrationId } from '../lib/types'
 
@@ -18,7 +19,7 @@ export default function Integrations() {
   const [q, setQ] = useState('')
   const connected = INTEGRATIONS.filter((i) => s.integrations[i.id]?.connected).length
   const can = useCan()
-  const allowed = (id: IntegrationId) => (PLAN_FEATURE[id] ? can(PLAN_FEATURE[id]!) : can('all_integrations'))
+  const allowed = (id: IntegrationId) => (PLAN_FEATURE[id] ? can(PLAN_FEATURE[id]!) : can('all_integrations') || STARTER_INTEGRATIONS.includes(id))
 
   return (
     <div>

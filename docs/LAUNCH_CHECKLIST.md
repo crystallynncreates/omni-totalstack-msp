@@ -10,7 +10,7 @@ Do these once, in order. Each step says where to click.
 
 ## 2. Stripe: how MSPs pay you, about 10 minutes
 1. dashboard.stripe.com → **Product catalog** → add product **Omni TotalStack MSP** with three prices:
-   **Unlimited $99 / month (recurring)**, **Business $249 / month (recurring)**, **Enterprise $4,500 (one-time)**. Copy each `price_…` ID.
+   **Starter $29.99 / month (recurring)**, **Unlimited $99 / month (recurring)**, **Business $249 / month (recurring)**, **Enterprise $4,500 (one-time)**. Copy each `price_…` ID.
 2. **Developers → Webhooks → Add endpoint**: `https://YOUR-DOMAIN/api/billing/webhook`
    Events: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`.
    Copy the **signing secret**.

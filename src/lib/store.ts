@@ -7,7 +7,7 @@ import * as seed from './seed'
 import { iso, uid } from './format'
 import { PLANS, limitFor, type OrgStatus, type PlanId } from '../../shared/plans'
 
-export const APP_VERSION = '1.2.0'
+export const APP_VERSION = '1.3.0'
 
 type Collections = {
   clients: T.Client[]

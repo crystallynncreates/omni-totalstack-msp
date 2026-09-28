@@ -1,8 +1,8 @@
 // Omni TotalStack MSP subscription plans — shared by the web app and the API.
-// Stripe price IDs come from env: STRIPE_PRICE_UNLIMITED, STRIPE_PRICE_BUSINESS (monthly recurring)
+// Stripe price IDs come from env: STRIPE_PRICE_STARTER, STRIPE_PRICE_UNLIMITED, STRIPE_PRICE_BUSINESS (monthly recurring)
 // and STRIPE_PRICE_ENTERPRISE (a ONE-TIME price: Enterprise is a lifetime license for a standalone copy).
 
-export type PlanId = 'unlimited' | 'business' | 'enterprise'
+export type PlanId = 'starter' | 'unlimited' | 'business' | 'enterprise'
 export type Feature =
   | 'proposals' | 'client_portal' | 'landing_page' | 'network_discovery' | 'patching' | 'invoices' | 'stripe_payments'
   | 'weekly_emails' | 'payroll' | 'quickbooks' | 'ai_assistant' | 'ai_voice' | 'qbr' | 'custom_domain' | 'procurement' | 'all_integrations'
@@ -19,10 +19,13 @@ export interface Plan {
   priceEnv?: string
 }
 
+const STARTER: Feature[] = ['proposals', 'client_portal', 'landing_page', 'network_discovery', 'patching', 'invoices', 'weekly_emails']
 const UNL: Feature[] = ['proposals', 'client_portal', 'landing_page', 'network_discovery', 'patching', 'invoices', 'stripe_payments', 'weekly_emails', 'procurement', 'all_integrations']
 const BIZ: Feature[] = [...UNL, 'payroll', 'quickbooks', 'ai_assistant', 'ai_voice', 'qbr', 'custom_domain']
 
 export const PLANS: Record<PlanId, Plan> = {
+  starter: { id: 'starter', name: 'Starter', price: 29.99, billing: 'monthly', blurb: 'For a solo tech getting their very first client.', limits: { clients: 1, devices: 25, seats: 1 }, features: STARTER, priceEnv: 'STRIPE_PRICE_STARTER',
+    highlights: ['1 staff login', '1 client & up to 25 devices', 'Branded website & client portal', 'Proposals with 3 options + RFS PDFs', 'Network discovery & 15-day patch policy', 'Invoices, non-payment notices & weekly client emails', 'Core integrations: RMM, Huntress, Microsoft 365, Entra ID, UniFi'] },
   unlimited: { id: 'unlimited', name: 'Unlimited', price: 99, billing: 'monthly', blurb: 'Solo operators who want everything that runs the business.', limits: { clients: Infinity, devices: Infinity, seats: 2 }, features: UNL, priceEnv: 'STRIPE_PRICE_UNLIMITED',
     highlights: ['Unlimited clients & devices', '2 staff seats', 'Branded website & client portal', 'All core integrations (RMM, Huntress, M365, UniFi…)', 'Client payments: ACH, card, Apple/Google Pay', 'Automatic weekly client update emails'] },
   business: { id: 'business', name: 'Business', price: 249, billing: 'monthly', blurb: 'Growing MSPs with a team of technicians.', limits: { clients: Infinity, devices: Infinity, seats: 10 }, features: BIZ, priceEnv: 'STRIPE_PRICE_BUSINESS',
@@ -30,7 +33,9 @@ export const PLANS: Record<PlanId, Plan> = {
   enterprise: { id: 'enterprise', name: 'Enterprise', price: 4500, billing: 'one_time', blurb: 'Own it forever. Your own standalone copy, fully disconnected from the Omni platform.', limits: { clients: Infinity, devices: Infinity, seats: Infinity }, features: BIZ, priceEnv: 'STRIPE_PRICE_ENTERPRISE',
     highlights: ['One-time payment, no monthly fees', 'Your own standalone install, disconnected from Omni', 'Runs on your own domain (you purchase it)', 'Unlimited seats, clients & devices', 'Every Business feature', 'All your data moved over at handoff'] },
 }
-export const PLAN_ORDER: PlanId[] = ['unlimited', 'business', 'enterprise']
+export const PLAN_ORDER: PlanId[] = ['starter', 'unlimited', 'business', 'enterprise']
+/** Integrations available on Starter (every other plan gets all integrations its features allow). */
+export const STARTER_INTEGRATIONS = ['rmm', 'huntress', 'm365', 'entra', 'unifi']
 export const HANDOFF_DAYS = 30 // Enterprise buyers keep their hosted workspace this long while their standalone copy is set up
 
 export type OrgStatus = 'pending' | 'active' | 'past_due' | 'suspended' | 'canceled' | 'disconnected'

@@ -11,7 +11,7 @@ create table orgs (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text unique not null check (slug ~ '^[a-z0-9][a-z0-9-]{1,40}$'),
-  plan text not null default 'unlimited' check (plan in ('unlimited','business','enterprise')),
+  plan text not null default 'unlimited' check (plan in ('starter','unlimited','business','enterprise')),
   status text not null default 'pending' check (status in ('pending','active','past_due','suspended','canceled','disconnected')),
   license text not null default 'subscription' check (license in ('subscription','lifetime')), -- lifetime = Enterprise one-time purchase
   handoff_by timestamptz,                             -- Enterprise: hosted workspace stays on until this date, then disconnects
@@ -140,6 +140,20 @@ begin
 end $$;
 create trigger orgs_protect before update on orgs for each row execute function protect_billing_columns();
 
+-- Plan limits (clients / devices) enforced in the database — only Starter is capped (1 client, 25 devices).
+create or replace function enforce_plan_limits() returns trigger language plpgsql security definer set search_path = public as $$
+declare p text; c boolean; lim int; n int;
+begin
+  if new.collection not in ('clients','devices') then return new; end if;
+  select plan, comped into p, c from orgs where id = new.org_id;
+  if c or p <> 'starter' then return new; end if;
+  lim := case new.collection when 'clients' then 1 else 25 end;
+  select count(*) into n from records where org_id = new.org_id and collection = new.collection;
+  if n >= lim then raise exception 'PLAN_LIMIT: the Starter plan includes % %. Upgrade to Unlimited to add more.', lim, case when lim = 1 then 'client' else new.collection end; end if;
+  return new;
+end $$;
+create trigger records_limits before insert on records for each row execute function enforce_plan_limits();
+
 -- Seat limits (staff members) enforced in the database.
 create or replace function enforce_seat_limits() returns trigger language plpgsql security definer set search_path = public as $$
 declare p text; c boolean; lim int; n int;
@@ -147,7 +161,7 @@ begin
   if new.role = 'client' then return new; end if;
   select plan, comped into p, c from orgs where id = new.org_id;
   if c or p = 'enterprise' then return new; end if;
-  lim := case p when 'unlimited' then 2 when 'business' then 10 else 1000000 end;
+  lim := case p when 'starter' then 1 when 'unlimited' then 2 when 'business' then 10 else 1000000 end;
   select count(*) into n from org_members where org_id = new.org_id and role <> 'client';
   if n >= lim then raise exception 'SEAT_LIMIT: your plan allows % staff seat(s). Upgrade to add more.', lim; end if;
   return new;

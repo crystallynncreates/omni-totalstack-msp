@@ -115,7 +115,7 @@ function StandaloneSetup() {
 
 function PlanGrid({ current, onPick, busy }: { current: PlanId; onPick: (p: PlanId) => void; busy: string | null }) {
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {PLAN_ORDER.map((id) => {
         const p = PLANS[id]
         const isCur = id === current

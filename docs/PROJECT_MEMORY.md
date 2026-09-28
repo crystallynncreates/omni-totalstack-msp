@@ -5,7 +5,7 @@ This file is the single source of truth for **what was asked, what was decided a
 - **Owner:** Crystal (crystallynncreates)
 - **Repo:** `github.com/crystallynncreates/omni-totalstack-msp`
 - **Started:** 2026-09-27
-- **Current version:** 1.2.0 (multi-company SaaS; Enterprise = lifetime standalone)
+- **Current version:** 1.3.0 (multi-company SaaS; Enterprise = lifetime standalone)
 
 ## 1. Vision
 
@@ -58,7 +58,7 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 | Step 5: each MSP's own public pages & domain | `/m/<slug>`, wildcard subdomain, custom domain (Business+) via Admin → Website & domain (+ Vercel API) |
 | Step 6: invite team & clients | `pages/Team.tsx`, `api/_handlers/invites.ts`, `pages/AcceptInvite.tsx`; client users land in the branded portal |
 
-Pricing (editable in `shared/plans.ts`, set by Crystal 2026-09-27): **no free plan**. Unlimited $99/mo (2 seats), Business $249/mo (10 seats, payroll, QBO, AI, QBR, custom domain), **Enterprise $4,500 one-time, forever**. The buyer pays for their own domain and gets a standalone copy that is **disconnected from the platform** (`docs/STANDALONE.md`, `scripts/import-workspace.mjs`, `STANDALONE=true` mode). The hosted workspace stays on for a 30-day handoff window, then it's disconnected. Crystal's own account stays complimentary on the platform.
+Pricing (editable in `shared/plans.ts`, set by Crystal 2026-09-27): **no free plan**. **Starter $29.99/mo** (1 staff login, 1 client, 25 devices; proposals/RFS, branded site & portal, discovery, patching, invoices & notices, weekly emails; integrations limited to RMM, Huntress, M365, Entra ID, UniFi; no client online payments, procurement, payroll, QBO, AI, QBR or custom domain), Unlimited $99/mo (2 seats), Business $249/mo (10 seats, payroll, QBO, AI, QBR, custom domain), **Enterprise $4,500 one-time, forever**. The buyer pays for their own domain and gets a standalone copy that is **disconnected from the platform** (`docs/STANDALONE.md`, `scripts/import-workspace.mjs`, `STANDALONE=true` mode). The hosted workspace stays on for a 30-day handoff window, then it's disconnected. Crystal's own account stays complimentary on the platform.
 
 Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, suspension, grace period, plan limits, seat limits and billing-column protection were all tested with 8 scenarios, and all passed.
 
@@ -92,6 +92,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-27, v1.3.0:** Added the Starter plan ($29.99/mo): 1 staff, 1 client, 25 devices, limits enforced in the database and app.
 
 - **2026-09-27, v1.2.0:** Removed the Free Forever plan. Enterprise is now a $4,500 one-time lifetime license: one-time Stripe checkout, cancels any subscription, 30-day handoff, then disconnected; standalone mode, workspace export/import, Owner Console handoff controls.
 

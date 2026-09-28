@@ -60,7 +60,7 @@ export default function OmniHome() {
             <a href="#pricing" className="btn-ghost px-5 py-3 text-base">See pricing</a>
             <Link to="/m/demo" className="btn-ghost px-5 py-3 text-base">View a sample MSP site</Link>
           </div>
-          <p className="mt-4 text-sm text-muted">Monthly plans from $99. Or own it outright with Enterprise. Your workspace activates the moment you check out.</p>
+          <p className="mt-4 text-sm text-muted">Plans from $29.99/month, or own it outright with Enterprise. Your workspace activates the moment you check out.</p>
         </div>
         <AppPreview />
       </section>
@@ -96,7 +96,7 @@ export default function OmniHome() {
             <div className="text-xs font-semibold uppercase tracking-widest text-muted">How rollout works</div>
             <ol className="mt-3 space-y-4">
               {[
-                ['Choose a plan and check out', 'Stripe handles payment securely: monthly for Unlimited and Business, one payment for Enterprise.'],
+                ['Choose a plan and check out', 'Stripe handles payment securely: monthly for Starter, Unlimited and Business, one payment for Enterprise.'],
                 ['Your workspace goes live instantly', 'Your Command Center, public website and client portal are created the moment payment clears.'],
                 ['Brand it in the setup wizard', 'Upload your logo, pick colors, and set your address, rates and policies. It takes about 2 minutes.'],
                 ['Invite your team and clients', 'Technicians get the Command Center; clients get the portal with their tickets, invoices and documents.'],
@@ -111,7 +111,7 @@ export default function OmniHome() {
       <section id="pricing" className="mx-auto max-w-7xl px-4 py-16">
         <h2 className="mb-2 text-center h-display text-3xl md:text-4xl">Simple pricing that grows with you</h2>
         <p className="mb-10 text-center text-muted">Rent it monthly and cancel anytime, or buy Enterprise once and own your own copy forever.</p>
-        <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {PLAN_ORDER.map((id) => {
             const p = PLANS[id]
             const pop = id === 'business'
@@ -123,7 +123,7 @@ export default function OmniHome() {
                 <div className="mt-2"><span className="h-display text-4xl">${p.price.toLocaleString()}</span><span className="text-muted">{p.billing === 'one_time' ? ' one-time' : '/mo'}</span></div>
                 <p className="mt-1 text-sm text-muted">{p.blurb}</p>
                 <ul className="mt-4 flex-1 space-y-2 text-sm">{p.highlights.map((f) => <li key={f} className="flex gap-2"><Check size={16} className="mt-0.5 shrink-0 text-ok" />{f}</li>)}</ul>
-                <Link to={`/signup?plan=${id}`} className={cx('mt-5', pop ? 'btn-primary' : 'btn-ghost')}>{p.billing === 'one_time' ? `Buy Enterprise` : `Start ${p.name}`}</Link>
+                <Link to={`/signup?plan=${id}`} className={cx('mt-5', pop ? 'btn-primary' : 'btn-ghost')}>{p.billing === 'one_time' ? `Buy Enterprise` : `Choose ${p.name}`}</Link>
               </div>
             )
           })}
