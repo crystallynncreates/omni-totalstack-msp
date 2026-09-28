@@ -77,6 +77,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 
 ## 4. Open items / next steps
 
+- [x] Supabase project **omni-totalstack-msp** (ref `flwaleljhiuexhjbxdnn`, us-east-1, org `nnsbnmoxanddyxgbuvhi`, free plan) created 2026-09-27; migrations 0001 + 0002 applied. URL https://flwaleljhiuexhjbxdnn.supabase.co. (The older project `gfhnwydldnvtvquagzav` belongs to another app — never put Omni tables there.)
+- [ ] Vercel project: the Vercel connector returns 403 for team `crystallynncreates-projects` (team_lFcREAfNO0wJzcKvnLN49uTe) — needs re-authorizing, or import via vercel.com/new.
 - [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
 - [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
 - [ ] Sign up with crystallynncreates@gmail.com for the free owner workspace.
@@ -92,6 +94,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-27:** Created the live Supabase project and applied the schema plus a security-hardening migration (0002).
 
 - **2026-09-27, v1.3.0:** Added the Starter plan ($29.99/mo): 1 staff, 1 client, 25 devices, limits enforced in the database and app.
 
