@@ -79,7 +79,9 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 
 - [x] Supabase project **omni-totalstack-msp** (ref `flwaleljhiuexhjbxdnn`, us-east-1, org `nnsbnmoxanddyxgbuvhi`, free plan) created 2026-09-27; migrations 0001 + 0002 applied. URL https://flwaleljhiuexhjbxdnn.supabase.co. (The older project `gfhnwydldnvtvquagzav` belongs to another app — never put Omni tables there.)
 - [x] Vercel project `omni-totalstack-msp` (prj_d4pqA9fBkFyHNzosyrEWRN7vtJXj, team_lFcREAfNO0wJzcKvnLN49uTe) live at https://omni-totalstack-msp.vercel.app. Env vars set except SUPABASE_SERVICE_ROLE_KEY. Vercel connector works when calls OMIT teamId (passing teamId → 403). Deploy with create_deployment gitSource github crystallynncreates/omni-totalstack-msp ref main. Previews are Vercel-auth protected; production is public.
-- [ ] Crystal to add SUPABASE_SERVICE_ROLE_KEY in Vercel (or paste it to Claude), then redeploy.
+- [x] SUPABASE_SERVICE_ROLE_KEY set in Vercel.
+- [x] Stripe LIVE connected 2026-09-29 (account "Crystal Lynn Creates", dedicated secret key "Omni TotalStack"). `scripts/setup-stripe.mjs` created the 4 prices (lookup keys omni_starter_monthly / omni_unlimited_monthly / omni_business_monthly / omni_enterprise_lifetime), webhook → /api/billing/webhook, and portal config; all IDs are in Vercel env (STRIPE_PRICE_*, PLATFORM_STRIPE_*, STRIPE_PORTAL_CONFIG). Cloud sandbox can't reach api.stripe.com — run Stripe scripts on Crystal's PC.
+- [ ] Resend (RESEND_API_KEY) so payment / failed-payment emails actually send.
 - [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
 - [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
 - [ ] Sign up with crystallynncreates@gmail.com for the free owner workspace.
@@ -95,6 +97,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-29:** Live on Vercel with Supabase + Stripe (live mode) connected. Fixed ESM import crash in the API.
 
 - **2026-09-27:** Created the live Supabase project and applied the schema plus a security-hardening migration (0002).
 
