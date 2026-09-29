@@ -1,8 +1,8 @@
 // Transactional email sent on the MSP's behalf (their brand name as sender): invoices and non-payment notices.
-import { body, demo, env, fail, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util.js'
+import { body, demo, emailConfigured, env, fail, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 export default async function email(req: Req, res: Res, kind: string, ctx: Ctx | null) {
-  if (!env('RESEND_API_KEY')) return demo(res, 'Email')
+  if (!emailConfigured()) return demo(res, 'Email')
   const b = await body<{ to: string; invoice?: { number: string; dueDate: string; lines: { qty: number; rate: number }[]; taxRate?: number }; text?: string }>(req)
   if (!b.to) return fail(res, 400, 'to required')
   const brand = String(ctx?.org.settings?.name || ctx?.org.name || 'Omni TotalStack MSP')

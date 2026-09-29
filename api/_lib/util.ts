@@ -140,14 +140,33 @@ export async function secret(orgId: string | null, integration: string, k: strin
   return ''
 }
 
+// Email: Gmail/any SMTP (SMTP_USER + SMTP_PASS, e.g. a Gmail app password) or Resend (RESEND_API_KEY).
+export const emailConfigured = () => !!(env('SMTP_USER') && env('SMTP_PASS')) || !!env('RESEND_API_KEY')
+let mailer: import('nodemailer').Transporter | null = null
 export async function sendEmail(to: string, subject: string, html: string, fromName?: string) {
+  const name = (fromName || 'Omni TotalStack MSP').replace(/[<>"]/g, '')
+  if (env('SMTP_USER') && env('SMTP_PASS')) {
+    try {
+      if (!mailer) {
+        const nm = (await import('nodemailer')).default
+        const port = Number(env('SMTP_PORT') || 465)
+        mailer = nm.createTransport({ host: env('SMTP_HOST') || 'smtp.gmail.com', port, secure: port === 465, auth: { user: env('SMTP_USER'), pass: env('SMTP_PASS').replace(/\s+/g, '') } })
+      }
+      const addr = env('EMAIL_FROM_ADDRESS') || env('SMTP_USER')
+      await mailer.sendMail({ from: `"${name}" <${addr}>`, to, subject, html })
+      return { ok: true, status: 200 }
+    } catch (e) {
+      console.error('sendEmail(smtp) failed', (e as Error).message)
+      return { ok: false, status: 502, error: (e as Error).message }
+    }
+  }
   const k = env('RESEND_API_KEY')
   if (!k) return { ok: false, demo: true }
   const addr = env('EMAIL_FROM_ADDRESS') || 'updates@omnitotalstack.com'
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${k}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: `${fromName || 'Omni TotalStack MSP'} <${addr}>`, to, subject, html }),
+    body: JSON.stringify({ from: `${name} <${addr}>`, to, subject, html }),
   })
   return { ok: r.ok, status: r.status }
 }
