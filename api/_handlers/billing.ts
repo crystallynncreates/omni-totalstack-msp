@@ -124,7 +124,7 @@ export default async function billing(req: Req, res: Res, action: string, ctx: C
 
   if (action === 'portal') {
     if (!org.stripe_customer_id) return fail(res, 400, 'No billing account yet — choose a plan first.')
-    const s = await stripeCall<{ url: string }>(key, '/billing_portal/sessions', { customer: org.stripe_customer_id, return_url: `${origin(req)}/app/billing` })
+    const s = await stripeCall<{ url: string }>(key, '/billing_portal/sessions', { customer: org.stripe_customer_id, return_url: `${origin(req)}/app/billing`, ...(env('STRIPE_PORTAL_CONFIG') ? { configuration: env('STRIPE_PORTAL_CONFIG') } : {}) })
     return ok(res, { url: s.url })
   }
   return fail(res, 404, 'Unknown billing action')
