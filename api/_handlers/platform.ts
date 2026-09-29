@@ -1,6 +1,6 @@
 // Platform owner console (PLATFORM_OWNER_EMAILS only): every MSP workspace, revenue, and manual controls.
-import { body, fail, isPlatformOwner, mustDb, ok, userFromReq, type Req, type Res } from '../_lib/util'
-import { PLANS, type PlanId } from '../../shared/plans'
+import { body, fail, isPlatformOwner, mustDb, ok, userFromReq, type Req, type Res } from '../_lib/util.js'
+import { PLANS, type PlanId } from '../../shared/plans.js'
 
 export default async function platform(req: Req, res: Res, action: string) {
   const user = await userFromReq(req)

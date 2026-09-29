@@ -1,5 +1,5 @@
 // Microsoft 365 + Entra ID via Microsoft Graph (client credentials; use GDAP to reach client tenants).
-import { body, demo, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, demo, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 async function token(tenant: string, clientId: string, clientSecret: string) {
   const r = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, scope: 'https://graph.microsoft.com/.default', grant_type: 'client_credentials' }) })

@@ -1,7 +1,7 @@
 // Who am I? Returns the signed-in user's workspace, role and branding.
 // The platform owner (PLATFORM_OWNER_EMAILS) gets a complimentary Enterprise workspace automatically.
-import { fail, isPlatformOwner, mustDb, ok, userFromReq, type Ctx, type Req, type Res } from '../_lib/util'
-import { defaultSettings } from './signup'
+import { fail, isPlatformOwner, mustDb, ok, userFromReq, type Ctx, type Req, type Res } from '../_lib/util.js'
+import { defaultSettings } from './signup.js'
 
 const safe = (o: Record<string, unknown>) => { const { stripe_customer_id, stripe_subscription_id, ...rest } = o; void stripe_customer_id; void stripe_subscription_id; return rest }
 

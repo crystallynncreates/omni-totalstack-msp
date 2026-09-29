@@ -1,5 +1,5 @@
 // UniFi Site Manager API (https://developer.ui.com/site-manager-api/): sites, hosts, devices → outage detection.
-import { demo, notify, records, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { demo, notify, records, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 const u = async (key: string, path: string) => { const r = await fetch(`https://api.ui.com/v1${path}`, { headers: { 'X-API-KEY': key, Accept: 'application/json' } }); if (!r.ok) throw new Error(`UniFi ${path}: ${r.status}`); return r.json() }
 

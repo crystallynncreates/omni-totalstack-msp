@@ -1,7 +1,7 @@
 // Full workspace export (owner/admin): settings, non-secret integration state, team list and every record.
 // Used for Enterprise handoff to a standalone copy (scripts/import-workspace.mjs) and for data portability.
 // Integration SECRETS are never exported — the MSP re-enters its keys in the new copy.
-import { fail, mustDb, ok, type Ctx, type Req, type Res } from '../_lib/util'
+import { fail, mustDb, ok, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 export default async function exportData(req: Req, res: Res, _a: string, ctx: Ctx | null) {
   if (!ctx || !['owner', 'admin'].includes(ctx.role)) return fail(res, 403, 'Only the owner or an admin can export the workspace.')

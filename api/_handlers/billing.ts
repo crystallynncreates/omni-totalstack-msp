@@ -1,8 +1,8 @@
 // Omni subscription billing: checkout (upgrade / reactivate), customer portal, and the Stripe webhook that
 // activates workspaces on payment and locks them on non-payment (after a grace period).
-import { body, env, fail, mustDb, ok, origin, raw, sendEmail, type Ctx, type Req, type Res } from '../_lib/util'
-import { stripeCall, verifyStripe } from '../_lib/stripe'
-import { GRACE_DAYS, HANDOFF_DAYS, PLANS, type PlanId } from '../../shared/plans'
+import { body, env, fail, mustDb, ok, origin, raw, sendEmail, type Ctx, type Req, type Res } from '../_lib/util.js'
+import { stripeCall, verifyStripe } from '../_lib/stripe.js'
+import { GRACE_DAYS, HANDOFF_DAYS, PLANS, type PlanId } from '../../shared/plans.js'
 
 const planFromPrice = (priceId?: string): PlanId | null => {
   for (const p of Object.values(PLANS)) if (p.priceEnv && env(p.priceEnv) && env(p.priceEnv) === priceId) return p.id

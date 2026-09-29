@@ -1,7 +1,7 @@
 // Claude (Anthropic Messages API). Omni provides AI to Business/Enterprise workspaces from the platform key;
 // an MSP may also connect its own Anthropic key.
-import { body, demo, env, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
-import { hasFeature } from '../../shared/plans'
+import { body, demo, env, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
+import { hasFeature } from '../../shared/plans.js'
 
 export default async function claude(req: Req, res: Res, _a: string, ctx: Ctx | null) {
   if (req.method !== 'POST') return fail(res, 405, 'POST only')

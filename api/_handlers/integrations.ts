@@ -1,5 +1,5 @@
 // Each MSP saves its own integration keys — encrypted at rest, readable only by the server, never shared across MSPs.
-import { body, demo, encrypt, env, fail, mustDb, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, demo, encrypt, env, fail, mustDb, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 type T = (org: string) => Promise<boolean>
 const TESTS: Record<string, T> = {
@@ -20,7 +20,7 @@ export default async function integrations(req: Req, res: Res, action: string, c
     let merged = b.config
     const prev = await sb.from('integration_secrets').select('config').eq('org_id', ctx.orgId).eq('id', b.id).maybeSingle()
     if (prev.data?.config) {
-      const { decrypt } = await import('../_lib/util')
+      const { decrypt } = await import('../_lib/util.js')
       try { merged = { ...JSON.parse(decrypt(prev.data.config)), ...Object.fromEntries(Object.entries(b.config).filter(([, v]) => v)) } } catch { /* keep new */ }
     }
     await sb.from('integration_secrets').upsert({ org_id: ctx.orgId, id: b.id, config: encrypt(JSON.stringify(merged)), updated_at: new Date().toISOString() })

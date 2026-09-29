@@ -1,9 +1,9 @@
 // Self-serve purchase: create the MSP's account + workspace, then send them to Stripe Checkout.
 // Unlimited & Business are monthly subscriptions; Enterprise is a one-time $4,500 lifetime license for a standalone copy.
 // The platform owner's own account (PLATFORM_OWNER_EMAILS) is complimentary and activated immediately.
-import { body, env, fail, isPlatformOwner, mustDb, ok, origin, orgBySlug, type Req, type Res } from '../_lib/util'
-import { stripeCall } from '../_lib/stripe'
-import { PLANS, type PlanId } from '../../shared/plans'
+import { body, env, fail, isPlatformOwner, mustDb, ok, origin, orgBySlug, type Req, type Res } from '../_lib/util.js'
+import { stripeCall } from '../_lib/stripe.js'
+import { PLANS, type PlanId } from '../../shared/plans.js'
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
 const RESERVED = new Set(['www', 'app', 'api', 'admin', 'omni', 'login', 'signup', 'portal', 'platform', 'owner', 'billing', 'help', 'docs', 'status', 'mail'])

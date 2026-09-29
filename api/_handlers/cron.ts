@@ -2,7 +2,7 @@
 //   weekly-updates : each MSP's active clients get that MSP's branded weekly system-update email (15-day soak policy)
 //   daily          : lock workspaces whose grace period ended; flag overdue invoices (→ non-payment notices)
 //                    and contracts expiring within 30 days
-import { env, fail, live, mustDb, notify, ok, putRecord, records, sendEmail, type Ctx, type Org, type Req, type Res } from '../_lib/util'
+import { env, fail, live, mustDb, notify, ok, putRecord, records, sendEmail, type Ctx, type Org, type Req, type Res } from '../_lib/util.js'
 
 const DAY = 864e5
 type Patch = { title: string; kb: string; releaseDate: string; lastIssueReported?: string; openIssues: number; deployedAt?: string }

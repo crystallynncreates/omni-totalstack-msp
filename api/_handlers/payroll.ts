@@ -1,5 +1,5 @@
 // Payroll adapter (Gusto). Omni prepares hours; the provider calculates taxes and runs direct deposit.
-import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 export default async function payroll(req: Req, res: Res, action: string, ctx: Ctx | null) {
   const token = await secret(ctx?.orgId ?? null, 'gusto', 'token', 'PAYROLL_TOKEN')

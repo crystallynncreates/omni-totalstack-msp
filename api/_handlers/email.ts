@@ -1,5 +1,5 @@
 // Transactional email sent on the MSP's behalf (their brand name as sender): invoices and non-payment notices.
-import { body, demo, env, fail, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, demo, env, fail, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 export default async function email(req: Req, res: Res, kind: string, ctx: Ctx | null) {
   if (!env('RESEND_API_KEY')) return demo(res, 'Email')

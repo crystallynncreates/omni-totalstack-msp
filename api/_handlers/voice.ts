@@ -1,6 +1,6 @@
 // Outbound AI voice calls to a lead, placed with the MSP's own voice provider (Vapi, Retell or ElevenLabs).
-import { body, demo, fail, live, ok, orgBySlug, secret, type Ctx, type Req, type Res } from '../_lib/util'
-import { hasFeature } from '../../shared/plans'
+import { body, demo, fail, live, ok, orgBySlug, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
+import { hasFeature } from '../../shared/plans.js'
 
 export default async function voice(req: Req, res: Res, action: string, ctx: Ctx | null) {
   if (action !== 'call') return fail(res, 404, 'Unknown voice action')

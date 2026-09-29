@@ -1,6 +1,6 @@
 // Network discovery: each MSP gets its own agent token. The Omni Agent posts results into that MSP's workspace.
 import crypto from 'node:crypto'
-import { body, fail, live, mustDb, notify, ok, putRecord, records, type Ctx, type Org, type Req, type Res } from '../_lib/util'
+import { body, fail, live, mustDb, notify, ok, putRecord, records, type Ctx, type Org, type Req, type Res } from '../_lib/util.js'
 
 async function orgFromAgent(req: Req): Promise<Org | null> {
   const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '')

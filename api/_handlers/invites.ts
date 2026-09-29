@@ -1,6 +1,6 @@
 // Team & client-portal invitations. Owners/admins invite technicians, finance staff and client users;
 // the invitee sets a password and lands in the right workspace with the right role.
-import { body, context, fail, mustDb, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, context, fail, mustDb, ok, origin, sendEmail, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 export default async function invites(req: Req, res: Res, action: string, ctx: Ctx | null) {
   const sb = mustDb()

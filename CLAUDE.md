@@ -5,7 +5,7 @@ Read `docs/PROJECT_MEMORY.md` first. It's the full requirements, decisions, open
 Conventions:
 - The UI must stay novice-friendly: every page gets a `PageHeader` `help` line, empty states explain the next step, and nothing breaks without API keys.
 - Types live in `src/lib/types.ts` and mirror `supabase/migrations/*.sql` (snake_case in DB, camelCase in app).
-- New API endpoints go in `api/_handlers/<name>.ts` and get registered in `api/index.ts`. Return `demo(res, 'X')` when not configured.
+- New API endpoints go in `api/_handlers/<name>.ts` and get registered in `api/index.ts`. Relative imports in `api/` MUST end in `.js` (Vercel runs them as native ESM; extensionless imports crash with FUNCTION_INVOCATION_FAILED). Return `demo(res, 'X')` when not configured.
 - Huntress must remain mandatory in every proposal option (`mandatory: true`).
 - Patch deployment must respect `patchStage()`. Never bypass the soak policy in code.
 - Verify with `npx tsc -b && npx tsc -p api/tsconfig.json && npm run build`.

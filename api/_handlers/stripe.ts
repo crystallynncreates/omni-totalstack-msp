@@ -1,8 +1,8 @@
 // Client payments INTO each MSP's own Stripe account (ACH, card, Apple Pay / Google Pay), saved methods, auto-pay.
 // Amounts are always computed on the server from the invoice record — never trusted from the browser.
-import { body, fail, live, ok, orgBySlug, origin, raw, records, putRecord, notify, secret, demo, type Ctx, type Org, type Req, type Res } from '../_lib/util'
-import { stripeCall, verifyStripe } from '../_lib/stripe'
-import { hasFeature } from '../../shared/plans'
+import { body, fail, live, ok, orgBySlug, origin, raw, records, putRecord, notify, secret, demo, type Ctx, type Org, type Req, type Res } from '../_lib/util.js'
+import { stripeCall, verifyStripe } from '../_lib/stripe.js'
+import { hasFeature } from '../../shared/plans.js'
 
 type Inv = { id: string; number: string; clientId: string; status: string; lines: { qty: number; rate: number }[]; taxRate: number }
 const total = (i: Inv) => { const s = i.lines.reduce((a, l) => a + l.qty * l.rate, 0); return s + s * (i.taxRate || 0) / 100 }

@@ -1,5 +1,5 @@
 // RMM adapter. Implemented: NinjaOne (OAuth client credentials) and Atera (API key). Others: add a case below.
-import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { body, demo, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 async function ninjaToken(base: string, id: string, sec: string) {
   const r = await fetch(`${base}/ws/oauth/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: sec, scope: 'monitoring management control' }) })

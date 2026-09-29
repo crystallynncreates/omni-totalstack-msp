@@ -1,6 +1,6 @@
 // Lead capture & booking from each MSP's own public landing page (identified by slug). Leads land in that MSP's workspace.
 import crypto from 'node:crypto'
-import { body, fail, live, notify, ok, orgBySlug, putRecord, sendEmail, env, type Req, type Res } from '../_lib/util'
+import { body, fail, live, notify, ok, orgBySlug, putRecord, sendEmail, env, type Req, type Res } from '../_lib/util.js'
 
 const id = (p: string) => p + crypto.randomBytes(6).toString('hex')
 

@@ -1,7 +1,7 @@
 // Public branding for each MSP's own landing page & client portal (by slug, subdomain or custom domain),
 // plus custom-domain setup. Locked (unpaid) workspaces report live:false so their public pages go dark.
-import { body, context, env, fail, live, mustDb, ok, orgByHost, orgBySlug, type Req, type Res } from '../_lib/util'
-import { hasFeature } from '../../shared/plans'
+import { body, context, env, fail, live, mustDb, ok, orgByHost, orgBySlug, type Req, type Res } from '../_lib/util.js'
+import { hasFeature } from '../../shared/plans.js'
 
 const PUBLIC_KEYS = ['name', 'legalName', 'address', 'city', 'state', 'zip', 'phone', 'email', 'website', 'logoDataUrl', 'accent', 'huntressPortalUrl', 'patchSoakDays', 'laborRate', 'tagline', 'services', 'pricing']
 

@@ -1,5 +1,5 @@
 // Huntress API (https://api.huntress.io/docs): organizations, agents, incident reports.
-import { demo, records, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { demo, records, putRecord, fail, ok, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 async function hget(path: string, key: string, sec: string) {
   const r = await fetch(`https://api.huntress.io/v1${path}`, { headers: { Authorization: 'Basic ' + Buffer.from(`${key}:${sec}`).toString('base64') } })

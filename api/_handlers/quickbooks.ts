@@ -1,6 +1,6 @@
 // QuickBooks Online (per MSP): OAuth connect/callback, P&L, A/R aging, bills.
 import crypto from 'node:crypto'
-import { db, demo, env, fail, ok, origin, secret, type Ctx, type Req, type Res } from '../_lib/util'
+import { db, demo, env, fail, ok, origin, secret, type Ctx, type Req, type Res } from '../_lib/util.js'
 
 const AUTH = 'https://appcenter.intuit.com/connect/oauth2'
 const TOKEN = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
