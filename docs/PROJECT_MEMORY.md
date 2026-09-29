@@ -84,6 +84,7 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - [ ] Resend (RESEND_API_KEY) so payment / failed-payment emails actually send.
 - [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
 - [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
+  - **REMINDER for Crystal when the domain is set up:** switch platform email off Gmail (omnitotalstack@gmail.com, SMTP_USER/SMTP_PASS app password, ~500/day limit) to a branded address on the domain (e.g. updates@<domain> via Resend: verify domain → RESEND_API_KEY + EMAIL_FROM_ADDRESS, then remove SMTP_USER/SMTP_PASS). Also update PUBLIC_URL, the Stripe webhook URL (re-run scripts/setup-stripe.mjs with the new PUBLIC_URL) and add the domain in Vercel.
 - [ ] Sign up with crystallynncreates@gmail.com for the free owner workspace.
 
 
