@@ -12,3 +12,5 @@ Conventions:
 - Multi-tenant: all workspace data is in `records` (org_id, collection, id, data) with RLS; never add a table without `org_id` + RLS. Billing fields on `orgs` are server-only.
 - Plans/limits/features live in `shared/plans.ts` (used by both app and API) and are also enforced by DB triggers.
 - An MSP's integration keys must never fall back to platform env vars (see `PLATFORM_PROVIDED` in `api/_lib/util.ts`).
+- Command Console (`shared/commands.ts` → `api/_handlers/command.ts` → `api/_lib/adapters.ts`): the server re-parses the text; never accept steps from the browser. Keep DELETE/ALL confirmations, admin-only intents and the patch soak check.
+- Customer Guides (`/app/guides`) are platform-owner only.

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate, Link, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Magnet, FileSignature, Landmark, UserCog, Truck, Target, Building2, Radar, RefreshCw, ShieldCheck,
-  Ticket, FolderKanban, Boxes, BookOpen, Wrench, Plug, Bot, Settings, Search, Bell, Sun, Moon, CircleHelp, Sparkles, Menu, X, LogOut, ExternalLink, CreditCard, UsersRound, Crown, Lock, AlertTriangle,
+  Ticket, FolderKanban, Boxes, BookOpen, Wrench, Plug, Bot, TerminalSquare, GraduationCap, Settings, Search, Bell, Sun, Moon, CircleHelp, Sparkles, Menu, X, LogOut, ExternalLink, CreditCard, UsersRound, Crown, Lock, AlertTriangle, Download,
 } from 'lucide-react'
 import { useStore, APP_VERSION } from '../lib/store'
 import { cx, Toaster } from './ui'
@@ -40,6 +40,7 @@ export const NAV = [
     { to: '/app/tools', label: 'Tools', icon: Wrench, tour: 'nav-tools' },
   ] },
   { group: 'System', items: [
+    { to: '/app/command', label: 'Command Console', icon: TerminalSquare, tour: 'nav-command' },
     { to: '/app/integrations', label: 'Integrations', icon: Plug, tour: 'nav-integrations' },
     { to: '/app/assistant', label: 'AI Assistant', icon: Bot, tour: 'nav-assistant', feature: 'ai_assistant' as Feature },
     { to: '/app/team', label: 'Team & Client Logins', icon: UsersRound, tour: 'nav-team' },
@@ -125,6 +126,13 @@ export default function Layout() {
   const nav = useNavigate()
 
   useEffect(() => setMobile(false), [loc.pathname])
+  // "Install app" (Android/Chrome/Edge) — the browser offers this once Omni is installable.
+  const [installEvt, setInstallEvt] = useState<{ prompt: () => Promise<void> } | null>(null)
+  useEffect(() => {
+    const h = (e: Event) => { e.preventDefault(); setInstallEvt(e as unknown as { prompt: () => Promise<void> }) }
+    window.addEventListener('beforeinstallprompt', h)
+    return () => window.removeEventListener('beforeinstallprompt', h)
+  }, [])
   useEffect(() => {
     if (!ui.signedIn && !session) nav('/login')
   }, [ui.signedIn, session, nav])
@@ -159,6 +167,9 @@ export default function Layout() {
               {g.group === 'System' && session?.platformOwner && !STANDALONE && (
                 <NavLink to="/app/owner" className={({ isActive }) => cx('flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm', isActive ? 'bg-warn/15 font-medium text-warn' : 'text-warn/80 hover:bg-warn/10')}><Crown size={17} /> Omni Owner Console</NavLink>
               )}
+              {g.group === 'System' && session?.platformOwner && !STANDALONE && (
+                <NavLink to="/app/guides" data-tour="nav-guides" className={({ isActive }) => cx('flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm', isActive ? 'bg-warn/15 font-medium text-warn' : 'text-warn/80 hover:bg-warn/10')}><GraduationCap size={17} /> Customer Guides</NavLink>
+              )}
             </div>
           ))}
         </nav>
@@ -175,6 +186,8 @@ export default function Layout() {
           <GlobalSearch />
           <div className="ml-auto flex items-center gap-1">
             <button onClick={() => setWhatsNew(true)} className="hidden items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm text-muted hover:bg-ink/5 sm:flex" title="What's new"><Sparkles size={16} /> What's new</button>
+            {installEvt && <button onClick={async () => { await installEvt.prompt(); setInstallEvt(null) }} className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex" title="Install Omni as an app on this device"><Download size={14} /> Install app</button>}
+            {installEvt && <button onClick={async () => { await installEvt.prompt(); setInstallEvt(null) }} className="btn-ghost hidden px-3 py-1.5 text-xs sm:inline-flex" title="Install Omni as an app on this device"><Download size={14} /> Install app</button>}
             <button onClick={() => setTour(true)} className="rounded-xl p-2 hover:bg-ink/5" title="Take the tour" aria-label="Help tour" data-tour="help"><CircleHelp size={18} /></button>
             <button onClick={() => setUI({ theme: ui.theme === 'dark' ? 'light' : 'dark' })} className="rounded-xl p-2 hover:bg-ink/5" title="Light / dark" aria-label="Toggle theme">{ui.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
             <Notifications />

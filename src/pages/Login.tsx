@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, PlayCircle } from 'lucide-react'
 import { useStore } from '../lib/store'
@@ -14,6 +14,27 @@ export default function Login() {
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+  const [recover, setRecover] = useState(p.get('recover') === '1' && /type=recovery/.test(window.location.hash))
+  const [pw2, setPw2] = useState('')
+
+  // Password-reset links land here: let the person choose a new password.
+  useEffect(() => {
+    if (!supabase) return
+    const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') setRecover(true) })
+    return () => data.subscription.unsubscribe()
+  }, [])
+  const saveNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr('')
+    if (pw.length < 8) return setErr('Use at least 8 characters.')
+    if (pw !== pw2) return setErr('The two passwords don’t match.')
+    setBusy(true)
+    const { error } = await supabase!.auth.updateUser({ password: pw })
+    if (error) { setBusy(false); return setErr(error.message) }
+    const r = await bootstrap()
+    setBusy(false)
+    if (!r.ok) return setErr('Password saved. Please sign in.')
+    nav(r.session.role === 'client' ? `/m/${r.session.slug}/portal` : '/app')
+  }
 
   const exploreDemo = () => {
     useStore.setState({ session: null })
@@ -37,7 +58,7 @@ export default function Login() {
 
   const reset = async () => {
     if (!supabase || !email) return setErr('Enter your email above first.')
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login` })
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login?recover=1` })
     setErr('Password reset email sent — check your inbox.')
   }
 
@@ -50,6 +71,15 @@ export default function Login() {
           <p className="text-sm text-muted">{import.meta.env.VITE_STANDALONE_SLUG ? 'Command Center' : 'Omni TotalStack MSP Command Center'}</p>
         </div>
         {p.get('created') && <p className="mb-4 rounded-xl bg-ok/10 p-3 text-sm text-ok">{p.get('owner') ? 'Your complimentary owner workspace is ready.' : 'Your workspace is ready.'} Sign in to start the setup wizard.</p>}
+        {recover ? (
+          <form onSubmit={saveNewPassword} className="space-y-3">
+            <p className="rounded-xl bg-accent/10 p-3 text-sm">Choose a new password for your account.</p>
+            <input className="input" type="password" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} required autoFocus />
+            <input className="input" type="password" placeholder="Type it again" value={pw2} onChange={(e) => setPw2(e.target.value)} required />
+            {err && <p className="text-sm text-bad">{err}</p>}
+            <button className="btn-primary w-full py-3" disabled={busy}>{busy ? 'Saving…' : 'Save password & sign in'}</button>
+          </form>
+        ) : <>
         <form onSubmit={signIn} className="space-y-3">
           <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required={cloudEnabled} />
           <input className="input" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} required={cloudEnabled} />
@@ -57,6 +87,7 @@ export default function Login() {
           <button className="btn-primary w-full py-3" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'} <ArrowRight size={16} /></button>
         </form>
         {cloudEnabled && <button onClick={reset} className="mt-2 w-full text-center text-xs text-muted hover:text-accent">Forgot password?</button>}
+        </>}
         <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
         {!import.meta.env.VITE_STANDALONE_SLUG && <button onClick={exploreDemo} className="btn-ghost w-full"><PlayCircle size={16} /> Explore the demo workspace</button>}
         {!cloudEnabled && <p className="mt-4 rounded-xl bg-accent/5 p-3 text-center text-xs text-muted">Demo mode: the database isn't connected on this copy, so everything runs on sample data in your browser.</p>}

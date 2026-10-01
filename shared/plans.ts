@@ -25,9 +25,9 @@ const BIZ: Feature[] = [...UNL, 'payroll', 'quickbooks', 'ai_assistant', 'ai_voi
 
 export const PLANS: Record<PlanId, Plan> = {
   starter: { id: 'starter', name: 'Starter', price: 29.99, billing: 'monthly', blurb: 'For a solo tech getting their very first client.', limits: { clients: 1, devices: 25, seats: 1 }, features: STARTER, priceEnv: 'STRIPE_PRICE_STARTER',
-    highlights: ['1 staff login', '1 client & up to 25 devices', 'Branded website & client portal', 'Proposals with 3 options + RFS PDFs', 'Network discovery & 15-day patch policy', 'Invoices, non-payment notices & weekly client emails', 'Core integrations: RMM, Huntress, Microsoft 365, Entra ID, UniFi'] },
+    highlights: ['1 staff login', '1 client & up to 25 devices', 'Branded website & client portal', 'Proposals with 3 options + RFS PDFs', 'Network discovery & 15-day patch policy', 'Invoices, non-payment notices & weekly client emails', 'Core integrations: RMM (incl. Tactical RMM), Huntress, Microsoft 365, Entra ID, UniFi', 'Command Console & Android app'] },
   unlimited: { id: 'unlimited', name: 'Unlimited', price: 99, billing: 'monthly', blurb: 'Solo operators who want everything that runs the business.', limits: { clients: Infinity, devices: Infinity, seats: 2 }, features: UNL, priceEnv: 'STRIPE_PRICE_UNLIMITED',
-    highlights: ['Unlimited clients & devices', '2 staff seats', 'Branded website & client portal', 'All core integrations (RMM, Huntress, M365, UniFi…)', 'Client payments: ACH, card, Apple/Google Pay', 'Automatic weekly client update emails'] },
+    highlights: ['Unlimited clients & devices', '2 staff seats', 'Branded website & client portal', 'All core integrations (RMM, Huntress, M365, Proxmox, Automox, Webex…)', 'Command Console: one-line commands to every tool', 'Client payments: ACH, card, Apple/Google Pay', 'Automatic weekly client update emails'] },
   business: { id: 'business', name: 'Business', price: 249, billing: 'monthly', blurb: 'Growing MSPs with a team of technicians.', limits: { clients: Infinity, devices: Infinity, seats: 10 }, features: BIZ, priceEnv: 'STRIPE_PRICE_BUSINESS',
     highlights: ['Everything in Unlimited', '10 staff seats with roles', 'Payroll console & QuickBooks sync', 'Claude AI assistant & AI voice calls', 'QBR / IT strategy module', 'Your own custom domain'] },
   enterprise: { id: 'enterprise', name: 'Enterprise', price: 4500, billing: 'one_time', blurb: 'Own it forever. Your own standalone copy, fully disconnected from the Omni platform.', limits: { clients: Infinity, devices: Infinity, seats: Infinity }, features: BIZ, priceEnv: 'STRIPE_PRICE_ENTERPRISE',
@@ -35,7 +35,7 @@ export const PLANS: Record<PlanId, Plan> = {
 }
 export const PLAN_ORDER: PlanId[] = ['starter', 'unlimited', 'business', 'enterprise']
 /** Integrations available on Starter (every other plan gets all integrations its features allow). */
-export const STARTER_INTEGRATIONS = ['rmm', 'huntress', 'm365', 'entra', 'unifi']
+export const STARTER_INTEGRATIONS = ['rmm', 'tacticalrmm', 'huntress', 'm365', 'entra', 'unifi']
 export const HANDOFF_DAYS = 30 // Enterprise buyers keep their hosted workspace this long while their standalone copy is set up
 
 export type OrgStatus = 'pending' | 'active' | 'past_due' | 'suspended' | 'canceled' | 'disconnected'

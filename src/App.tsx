@@ -45,6 +45,9 @@ const Tools = lazy(() => import('./pages/Tools'))
 const Integrations = lazy(() => import('./pages/Integrations'))
 const Assistant = lazy(() => import('./pages/Assistant'))
 const Admin = lazy(() => import('./pages/Admin'))
+const Privacy = lazy(() => import('./pages/Privacy'))
+const Command = lazy(() => import('./pages/Command'))
+const Guides = lazy(() => import('./pages/Guides'))
 
 const Loading = () => <div className="grid h-full place-items-center text-sm text-muted">Loading…</div>
 
@@ -90,6 +93,7 @@ export default function App() {
           <Route path="/platform" element={<Navigate to="/#pricing" replace />} />
           <Route path="/signup" element={standalone ? <Navigate to="/login" replace /> : <Signup />} />
           <Route path="/welcome" element={<Welcome />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/login" element={<Login />} />
           <Route path="/m/:slug/*" element={<TenantSite />} />
@@ -115,6 +119,8 @@ export default function App() {
             <Route path="inventory" element={<Inventory />} />
             <Route path="documentation" element={<Documentation />} />
             <Route path="tools" element={<Tools />} />
+            <Route path="command" element={<Command />} />
+            <Route path="guides" element={<Guides />} />
             <Route path="integrations" element={<Integrations />} />
             <Route path="assistant" element={<FeatureGate feature="ai_assistant" name="The AI Assistant"><Assistant /></FeatureGate>} />
             <Route path="admin" element={<Admin />} />

@@ -140,6 +140,24 @@ export async function secret(orgId: string | null, integration: string, k: strin
   return ''
 }
 
+/** Full decrypted settings for one of an MSP's integrations ({} when not connected). */
+export async function integrationConfig(orgId: string, integration: string): Promise<Record<string, string>> {
+  const sb = db()
+  if (!sb || !env('INTEGRATIONS_ENCRYPTION_KEY')) return {}
+  const { data } = await sb.from('integration_secrets').select('config').eq('org_id', orgId).eq('id', integration).maybeSingle()
+  if (!data?.config) return {}
+  try { return JSON.parse(decrypt(data.config)) } catch { return {} }
+}
+/** Which integrations an MSP has saved keys for. */
+export async function connectedIntegrations(orgId: string): Promise<Set<string>> {
+  const sb = db()
+  if (!sb) return new Set()
+  const { data } = await sb.from('integration_secrets').select('id').eq('org_id', orgId)
+  const set = new Set((data || []).map((r) => r.id as string))
+  if (set.has('m365')) set.add('entra') // Entra ID uses the Microsoft 365 app registration
+  return set
+}
+
 // Email: Gmail/any SMTP (SMTP_USER + SMTP_PASS, e.g. a Gmail app password) or Resend (RESEND_API_KEY).
 export const emailConfigured = () => !!(env('SMTP_USER') && env('SMTP_PASS')) || !!env('RESEND_API_KEY')
 let mailer: import('nodemailer').Transporter | null = null

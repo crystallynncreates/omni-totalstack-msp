@@ -62,6 +62,13 @@ Pricing (editable in `shared/plans.ts`, set by Crystal 2026-09-27): **no free pl
 
 Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, suspension, grace period, plan limits, seat limits and billing-column protection were all tested with 8 scenarios, and all passed.
 
+## 2c. v1.4 requests (2026-09-30)
+- [stated] New integrations: RustDesk, Tactical RMM, Chocolatey, Zammad, Synology, PBS, ITFlow, Uptime Kuma, Proxmox, Entra admin center, Fusion Connect, Windows Server, Automox, Lansweeper, Webex → `src/lib/integrations.ts` (29 core cards) + adapters in `api/_lib/adapters.ts`.
+- [stated] Android app for Google Play → PWA (manifest, sw.js, icons) + TWA; `/.well-known/assetlinks.json` from env ANDROID_PACKAGE / ANDROID_SHA256 (`api/_handlers/app.ts`). Steps in `docs/ANDROID_APP.md`; store assets in `docs/play-store/`. Privacy policy at /privacy.
+- [stated] Send commands to all integrations by typing (e.g. "update windows 11", add/disable/delete user) → Command Console (`/app/command`, `shared/commands.ts`, `api/_handlers/command.ts`). See `docs/COMMANDS.md`. Patch soak policy enforced server-side.
+- [stated] Owner-account-only guides: User & Business Guide for Omni subscribers + Client Guide (tickets, invoices, paying) for Crystal's MSP clients → `/app/guides` (visible only when session.platformOwner), content in `src/lib/guides.ts`, PDF via `guidePdf`.
+- [stated] Update the Omni landing page with the new features (Command Console, integrations wall, mobile app, FAQ, privacy link).
+
 ## 3. Key decisions
 
 - **Stack:** Vite + React + TS on Vercel, with Supabase for DB/Auth. Chosen to match Crystal's existing *calendi* setup.
@@ -81,7 +88,9 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - [x] Vercel project `omni-totalstack-msp` (prj_d4pqA9fBkFyHNzosyrEWRN7vtJXj, team_lFcREAfNO0wJzcKvnLN49uTe) live at https://omni-totalstack-msp.vercel.app. Env vars set except SUPABASE_SERVICE_ROLE_KEY. Vercel connector works when calls OMIT teamId (passing teamId → 403). Deploy with create_deployment gitSource github crystallynncreates/omni-totalstack-msp ref main. Previews are Vercel-auth protected; production is public.
 - [x] SUPABASE_SERVICE_ROLE_KEY set in Vercel.
 - [x] Stripe LIVE connected 2026-09-29 (account "Crystal Lynn Creates", dedicated secret key "Omni TotalStack"). `scripts/setup-stripe.mjs` created the 4 prices (lookup keys omni_starter_monthly / omni_unlimited_monthly / omni_business_monthly / omni_enterprise_lifetime), webhook → /api/billing/webhook, and portal config; all IDs are in Vercel env (STRIPE_PRICE_*, PLATFORM_STRIPE_*, STRIPE_PORTAL_CONFIG). Cloud sandbox can't reach api.stripe.com — run Stripe scripts on Crystal's PC.
-- [ ] Resend (RESEND_API_KEY) so payment / failed-payment emails actually send.
+- [ ] Email: Gmail SMTP wired (SMTP_USER=omnitotalstack@gmail.com set); waiting on Crystal's Gmail app password → SMTP_PASS.
+- [ ] Supabase Auth → URL Configuration: Site URL https://omni-totalstack-msp.vercel.app (+ redirect URL https://omni-totalstack-msp.vercel.app/**) so password-reset links work.
+- [ ] Android: generate package (PWABuilder), set ANDROID_SHA256 (upload key + Play app-signing key), publish; then set VITE_PLAY_STORE_URL.
 - [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
 - [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
   - **REMINDER for Crystal when the domain is set up:** switch platform email off Gmail (omnitotalstack@gmail.com, SMTP_USER/SMTP_PASS app password, ~500/day limit) to a branded address on the domain (e.g. updates@<domain> via Resend: verify domain → RESEND_API_KEY + EMAIL_FROM_ADDRESS, then remove SMTP_USER/SMTP_PASS). Also update PUBLIC_URL, the Stripe webhook URL (re-run scripts/setup-stripe.mjs with the new PUBLIC_URL) and add the domain in Vercel.
@@ -98,6 +107,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-09-30, v1.4.0:** Command Console, 14 new integrations (+ Entra user admin), Android/PWA app, owner-only Customer Guides, landing page refresh, password-reset flow, privacy policy.
 
 - **2026-09-29:** Live on Vercel with Supabase + Stripe (live mode) connected. Fixed ESM import crash in the API.
 

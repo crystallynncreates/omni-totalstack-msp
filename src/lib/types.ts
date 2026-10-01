@@ -172,6 +172,7 @@ export interface Device {
   warrantyEnd?: string
   assignedUser?: string
   toner?: number // printers
+  rustdeskId?: string // RustDesk remote ID (Command Console: "connect to <host>")
 }
 
 export interface Patch {
@@ -332,6 +333,8 @@ export interface DirectoryUser { id: ID; clientId: ID; displayName: string; upn:
 export type IntegrationId =
   | 'claude' | 'rmm' | 'huntress' | 'm365' | 'entra' | 'unifi' | 'inventory' | 'quickbooks'
   | 'stripe' | 'gusto' | 'voice' | 'resend' | 'calendar' | 'backup' | 'print'
+  | 'tacticalrmm' | 'automox' | 'chocolatey' | 'winserver' | 'rustdesk' | 'proxmox' | 'pbs' | 'synology'
+  | 'uptimekuma' | 'lansweeper' | 'zammad' | 'itflow' | 'webex' | 'fusion'
 
 export interface IntegrationState { connected: boolean; config: Record<string, string>; lastSync?: string }
 

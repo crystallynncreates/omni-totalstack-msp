@@ -7,7 +7,7 @@ import * as seed from './seed'
 import { iso, uid } from './format'
 import { PLANS, limitFor, type OrgStatus, type PlanId } from '../../shared/plans'
 
-export const APP_VERSION = '1.3.0'
+export const APP_VERSION = '1.4.0'
 
 type Collections = {
   clients: T.Client[]
@@ -97,7 +97,8 @@ let onLimit: (msg: string) => void = () => {}
 export const setLimitHandler = (fn: (msg: string) => void) => { onLimit = fn }
 
 export const emptyIntegrations = (): Record<T.IntegrationId, T.IntegrationState> => {
-  const ids: T.IntegrationId[] = ['claude', 'rmm', 'huntress', 'm365', 'entra', 'unifi', 'inventory', 'quickbooks', 'stripe', 'gusto', 'voice', 'resend', 'calendar', 'backup', 'print']
+  const ids: T.IntegrationId[] = ['claude', 'rmm', 'huntress', 'm365', 'entra', 'unifi', 'inventory', 'quickbooks', 'stripe', 'gusto', 'voice', 'resend', 'calendar', 'backup', 'print',
+    'tacticalrmm', 'automox', 'chocolatey', 'winserver', 'rustdesk', 'proxmox', 'pbs', 'synology', 'uptimekuma', 'lansweeper', 'zammad', 'itflow', 'webex', 'fusion']
   return Object.fromEntries(ids.map((i) => [i, { connected: false, config: {} }])) as Record<T.IntegrationId, T.IntegrationState>
 }
 
@@ -163,6 +164,11 @@ export const useStore = create<State>()(
       version: 2,
       // In cloud mode the database is the source of truth — only UI preferences are kept in the browser.
       partialize: (s) => (s.session ? { ui: s.ui } : Object.fromEntries(Object.entries(s).filter(([, v]) => typeof v !== 'function'))) as unknown as State,
+      // New integrations added in later versions must appear for browsers that saved an older list.
+      merge: (persisted, current) => {
+        const p = (persisted || {}) as Partial<State>
+        return { ...current, ...p, integrations: { ...emptyIntegrations(), ...(p.integrations || current.integrations) } } as State
+      },
     },
   ),
 )

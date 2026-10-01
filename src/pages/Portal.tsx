@@ -214,6 +214,7 @@ function PortalSignIn() {
         <input className="input" type="password" required placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
         {err && <p className="text-sm text-bad">{err}</p>}
         <button className="btn-primary w-full py-3" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        <button type="button" onClick={async () => { if (!email) return setErr('Enter your email above first.'); await supabase!.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login?recover=1` }); setErr('Password reset email sent — check your inbox.') }} className="w-full text-center text-xs text-muted hover:text-accent">Forgot password?</button>
         <p className="text-center text-xs text-muted">First time here? Open the invitation link in your email to set your password.</p>
         <Link to={base || '/'} className="block text-center text-xs text-muted hover:text-accent">← Back to website</Link>
       </form>

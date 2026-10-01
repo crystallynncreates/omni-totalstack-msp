@@ -23,14 +23,16 @@ import tenant from './_handlers/tenant.js'
 import invites from './_handlers/invites.js'
 import platform from './_handlers/platform.js'
 import exportData from './_handlers/export.js'
+import command from './_handlers/command.js'
+import app from './_handlers/app.js'
 
 export type Handler = (req: Req, res: Res, action: string, ctx: Ctx | null) => unknown
 
-const routes: Record<string, Handler> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll, signup, billing, me, tenant, invites, platform, export: exportData }
+const routes: Record<string, Handler> = { claude, leads, book, voice, huntress, graph, unifi, rmm, quickbooks, stripe, email, cron, discovery, integrations, payroll, signup, billing, me, tenant, invites, platform, export: exportData, command, app }
 
 // Endpoints reachable without signing in (each verifies its own secret, token, signature or slug).
 function isPublic(root: string, action: string, method: string) {
-  if (['signup', 'tenant', 'leads', 'book', 'voice'].includes(root)) return true
+  if (['signup', 'tenant', 'leads', 'book', 'voice', 'app'].includes(root)) return true
   if (root === 'billing' && action === 'webhook') return true
   if (root === 'invites' && ['lookup', 'accept'].includes(action)) return true
   if (root === 'stripe' && ['webhook', 'pay'].includes(action)) return true

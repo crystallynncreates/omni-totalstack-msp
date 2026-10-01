@@ -14,6 +14,7 @@ export const TOUR_STEPS = [
   { target: 'nav-infrastructure', title: 'Sites & Infrastructure', text: 'Live status of every client site from UniFi and your RMM. Outages and "network down" show in red at the top.' },
   { target: 'nav-discovery', title: 'Network Discovery', text: 'Run the Omni Agent at a client site to find every device on the network. New or risky devices are flagged and can be added to inventory with one click.' },
   { target: 'nav-patching', title: 'Patching & Updates', text: 'Updates only deploy after 15 days with no reported bugs. Clients get an automatic email every week summarizing what was installed.' },
+  { target: 'nav-command', title: 'Command Console', text: 'Type what you want done — “update windows 11 on all devices at Acme”, “disable user john@acme.com”, “install chrome at Acme”. Omni shows the plan, you confirm, and it runs on the right tool.' },
   { target: 'nav-integrations', title: 'Integrations', text: 'Connect Claude, your RMM, Huntress, Microsoft 365, Entra ID, UniFi, QuickBooks, Stripe and more. Each card has step-by-step instructions.' },
   { target: 'nav-team', title: 'Team & Client Logins', text: 'Invite your technicians to this Command Center and your clients to your branded client portal. Clients only ever see their own company.' },
   { target: 'nav-billing', title: 'Plan & Billing', text: 'See your plan and usage, upgrade any time, and update your card. If a payment fails you get a 7-day grace period before anything pauses.' },

@@ -228,3 +228,30 @@ export function weeklyUpdateEmail(company: Company, clientName: string, deployed
   <p>No action is needed on your part. Devices may restart outside business hours. Questions? Reply to this email or call ${company.phone}.</p>
   <p style="color:#6e7482;font-size:12px">${company.legalName} · ${company.website}</p></div></div>`
 }
+
+/** Customer guide PDF (Omni subscriber guide, or an MSP's client guide). */
+export function guidePdf(g: { title: string; subtitle: string; audience: string; sections: { title: string; intro?: string; steps?: string[]; bullets?: string[]; tip?: string }[] }, brand: { name: string; line?: string; logoDataUrl?: string; footer: string }) {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' }) as Doc
+  const pdfSafe = (t: string) => t.replace(/→/g, '->').replace(/[✓✔]/g, 'v').replace(/[^\x20-\x7E -ÿ–—‘’“”•…€]/g, '')
+  const w = doc.internal.pageSize.getWidth(), h = doc.internal.pageSize.getHeight()
+  doc.setFillColor(12, 14, 20); doc.rect(0, 0, w, 120, 'F'); doc.setFillColor(...ACCENT); doc.rect(0, 120, w, 3, 'F')
+  if (brand.logoDataUrl) { try { doc.addImage(brand.logoDataUrl, 'PNG', 40, 22, 40, 40) } catch { /* ignore */ } }
+  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text(pdfSafe(brand.name), brand.logoDataUrl ? 90 : 40, 46)
+  doc.setFontSize(19); doc.text(doc.splitTextToSize(pdfSafe(g.title), w - 80), 40, 84)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(190, 196, 210); doc.text(pdfSafe(g.subtitle), 40, 106)
+  let y = para(doc, pdfSafe(g.audience), 148, 10, MUTED)
+  if (brand.line) y = para(doc, pdfSafe(brand.line), y, 9, MUTED)
+  // Contents
+  y = h2(doc, 'Contents', y + 6)
+  for (const s of g.sections) y = para(doc, pdfSafe(s.title), y - 4, 10)
+  for (const s of g.sections) {
+    y = h2(doc, pdfSafe(s.title), y + 10)
+    if (s.intro) y = para(doc, pdfSafe(s.intro), y)
+    s.steps?.forEach((x, i) => { y = para(doc, `${i + 1}.  ${pdfSafe(x)}`, y - 2) })
+    s.bullets?.forEach((x) => { y = para(doc, `•  ${pdfSafe(x)}`, y - 2) })
+    if (s.tip) y = para(doc, `Tip: ${pdfSafe(s.tip)}`, y, 9.5, ACCENT)
+  }
+  const pages = doc.getNumberOfPages()
+  for (let i = 1; i <= pages; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(...MUTED); doc.text(pdfSafe(brand.footer), 40, h - 24); doc.text(`Page ${i} of ${pages}`, w - 40, h - 24, { align: 'right' }) }
+  return doc
+}

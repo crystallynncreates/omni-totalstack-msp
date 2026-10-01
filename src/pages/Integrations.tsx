@@ -1,6 +1,6 @@
 // Integrations hub: guided connection for Claude, RMM, Huntress, M365, Entra ID, UniFi, inventory, QuickBooks, Stripe, payroll, voice, email…
 import { useState } from 'react'
-import { Plug, CheckCircle2, ExternalLink, Lock, Search } from 'lucide-react'
+import { Plug, CheckCircle2, ExternalLink, Lock, Search, TerminalSquare, Globe } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { INTEGRATIONS, MARKETPLACE, MARKETPLACE_COUNT, type IntegrationDef } from '../lib/integrations'
 import { Badge, Card, Field, Modal, PageHeader, toast, cx } from '../components/ui'
@@ -24,10 +24,10 @@ export default function Integrations() {
   return (
     <div>
       <PageHeader title="Integrations" subtitle={`${connected} of ${INTEGRATIONS.length} core integrations connected · ${MARKETPLACE_COUNT}+ in the marketplace`}
-        help="Each card has step-by-step instructions. API keys are sent to your secure server (Vercel environment / Supabase vault) — never stored in the browser. Until something is connected, Omni uses demo data so nothing breaks." />
+        help="Each card has step-by-step instructions. Once connected, you can control it by typing in the Command Console (for example “update windows 11 on all devices at Acme”). API keys are sent to your secure server (Vercel environment / Supabase vault) — never stored in the browser. Until something is connected, Omni uses demo data so nothing breaks." />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {INTEGRATIONS.map((i) => {
-          const st = s.integrations[i.id]
+          const st = s.integrations[i.id] as typeof s.integrations[typeof i.id] | undefined
           return (
             <div key={i.id} className={cx('glass flex flex-col p-4', st?.connected && 'ring-1 ring-ok/50')}>
               <div className="flex items-start justify-between gap-2">
@@ -35,10 +35,12 @@ export default function Integrations() {
                 {st?.connected ? <Badge tone="ok"><CheckCircle2 size={12} /> Connected</Badge> : <Badge>Not connected</Badge>}
               </div>
               <p className="mt-2 flex-1 text-sm text-muted">{i.blurb}</p>
-              <div className="mt-2 flex flex-wrap gap-1">{i.powers.map((p) => <span key={p} className="chip bg-accent/10 text-accent">{p}</span>)}</div>
+              <div className="mt-2 flex flex-wrap gap-1">{i.powers.map((p) => <span key={p} className="chip bg-accent/10 text-accent">{p}</span>)}{i.selfHosted && <span className="chip bg-warn/10 text-warn" title="Runs on your own server. It must be reachable from the internet over HTTPS (for example through a Cloudflare Tunnel).">Self-hosted</span>}</div>
+              {i.commands?.length ? <Link to={`/app/command?q=${encodeURIComponent(i.commands[0])}`} className="mt-2 flex items-center gap-1.5 truncate rounded-lg bg-ink/5 px-2 py-1 font-mono text-xs text-muted hover:text-accent" title="Try this in the Command Console"><TerminalSquare size={12} className="shrink-0" />{i.commands[0]}</Link> : null}
               {st?.lastSync && <div className="mt-2 text-xs text-muted">Last sync {timeAgo(st.lastSync)}</div>}
               <div className="mt-3 flex gap-2">
                 {allowed(i.id) ? <button className={st?.connected ? 'btn-ghost flex-1' : 'btn-primary flex-1'} onClick={() => setOpen(i)}><Plug size={14} /> {st?.connected ? 'Manage' : 'Connect'}</button> : <Link to="/app/billing" className="btn-ghost flex-1"><Lock size={14} /> Upgrade to connect</Link>}
+                {i.portal && <a href={i.portal} target="_blank" rel="noreferrer" className="btn-ghost" title="Open admin portal"><Globe size={14} /></a>}
                 {i.docs && <a href={i.docs} target="_blank" rel="noreferrer" className="btn-ghost" title="API docs"><ExternalLink size={14} /></a>}
               </div>
             </div>
@@ -62,7 +64,7 @@ export default function Integrations() {
 
 function ConnectModal({ def, onClose }: { def: IntegrationDef; onClose: () => void }) {
   const s = useStore()
-  const st = s.integrations[def.id]
+  const st = s.integrations[def.id] ?? { connected: false, config: {} }
   const [vals, setVals] = useState<Record<string, string>>(st.config)
   const [busy, setBusy] = useState(false)
 

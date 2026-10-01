@@ -4,18 +4,51 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api?path=:path*" },
-    { "source": "/((?!api/|agent/|assets/|favicon).*)", "destination": "/index.html" }
+    {
+      "source": "/.well-known/assetlinks.json",
+      "destination": "/api?path=app/assetlinks"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api?path=:path*"
+    },
+    {
+      "source": "/((?!api/|agent/|assets/|favicon|\\.well-known/|manifest|sw\\.js|icons/).*)",
+      "destination": "/index.html"
+    }
   ],
   "crons": [
-    { "path": "/api/cron/weekly-updates", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/daily", "schedule": "0 11 * * *" }
+    {
+      "path": "/api/cron/weekly-updates",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 11 * * *"
+    }
   ],
   "headers": [
-    { "source": "/(.*)", "headers": [
-      { "key": "X-Content-Type-Options", "value": "nosniff" },
-      { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-      { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
-    ] }
-  ]
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60
+    }
+  }
 }
