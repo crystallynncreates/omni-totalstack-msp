@@ -151,7 +151,7 @@ export default function OmniHome() {
             <h2 className="mt-3 h-display text-3xl">Your brand. Your clients. Not ours.</h2>
             <p className="mt-3 text-muted">Every Omni account gets its own branded platform. Your clients see your name, logo and colors on your website, client portal, proposals, RFS, invoices, receipts, weekly update emails and notices. Omni stays behind the scenes.</p>
             <ul className="mt-5 space-y-2 text-sm">
-              {['Your web address: yourcompany.omnitotalstack.com', 'Or connect your own domain (Business), or run your own standalone copy (Enterprise)', 'Your rates, payment terms, tax and patch policy', 'Your own Stripe account, so client payments go straight to you', 'Your own RMM, Huntress, Microsoft 365 and QuickBooks keys, never shared'].map((x) => <li key={x} className="flex gap-2"><Check size={16} className="mt-0.5 shrink-0 text-ok" />{x}</li>)}
+              {['Your web address: yourcompany.omni-totalstack.com', 'Or connect your own domain (Business), or run your own standalone copy (Enterprise)', 'Your rates, payment terms, tax and patch policy', 'Your own Stripe account, so client payments go straight to you', 'Your own RMM, Huntress, Microsoft 365 and QuickBooks keys, never shared'].map((x) => <li key={x} className="flex gap-2"><Check size={16} className="mt-0.5 shrink-0 text-ok" />{x}</li>)}
             </ul>
           </div>
           <div>
@@ -229,7 +229,7 @@ export default function OmniHome() {
 function AppPreview() {
   return (
     <div className="glass relative overflow-hidden p-4 shadow-glow" aria-hidden>
-      <div className="mb-3 flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-bad/70" /><span className="h-2.5 w-2.5 rounded-full bg-warn/70" /><span className="h-2.5 w-2.5 rounded-full bg-ok/70" /><span className="ml-3 text-xs text-muted">yourmsp.omnitotalstack.com/app</span></div>
+      <div className="mb-3 flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-bad/70" /><span className="h-2.5 w-2.5 rounded-full bg-warn/70" /><span className="h-2.5 w-2.5 rounded-full bg-ok/70" /><span className="ml-3 text-xs text-muted">yourmsp.omni-totalstack.com/app</span></div>
       <div className="mb-3 flex items-center gap-2 rounded-xl border border-bad/40 bg-bad/10 p-2.5 text-xs"><Siren size={14} className="text-bad" /><b className="text-bad">1 site DOWN</b><span className="text-muted">Copperline — Decatur · gateway unreachable</span></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[['MRR', '$12,725'], ['Overdue', '$7,855'], ['Open tickets', '5'], ['Patches ready', '1']].map(([k, v], i) => (

@@ -89,7 +89,7 @@ export async function orgByHost(host: string): Promise<Org | null> {
   const sb = mustDb()
   const { data } = await sb.from('orgs').select('*').eq('custom_domain', h).maybeSingle()
   if (data) return data as Org
-  const base = env('PLATFORM_DOMAIN').toLowerCase() // e.g. omnitotalstack.com → acme.omnitotalstack.com
+  const base = env('PLATFORM_DOMAIN').toLowerCase() // e.g. omni-totalstack.com → acme.omni-totalstack.com
   if (base && h.endsWith('.' + base)) return orgBySlug(h.slice(0, -(base.length + 1)))
   return null
 }
@@ -180,7 +180,7 @@ export async function sendEmail(to: string, subject: string, html: string, fromN
   }
   const k = env('RESEND_API_KEY')
   if (!k) return { ok: false, demo: true }
-  const addr = env('EMAIL_FROM_ADDRESS') || 'updates@omnitotalstack.com'
+  const addr = env('EMAIL_FROM_ADDRESS') || 'updates@omni-totalstack.com'
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${k}`, 'Content-Type': 'application/json' },

@@ -47,7 +47,7 @@ Crystal is starting an MSP. She needs a web app that lets **her, and other MSP o
 |---|---|
 | Public site that **targets MSP owners** and sells Omni | `pages/OmniHome.tsx` at `/` (features, white-label, rollout steps, pricing, FAQ) |
 | Buy a plan → **rolled out once paid** | `pages/Signup.tsx` → `api/_handlers/signup.ts` (account + workspace + Stripe Checkout) → `api/_handlers/billing.ts` webhook sets `active` |
-| Each MSP and its clients get the **current site, under their own brand** | Per-workspace data (`records` table + RLS), `lib/cloud.ts` sync; MSP public site & portal `pages/TenantSite.tsx` at `/m/<slug>`, `<slug>.omnitotalstack.com` or a custom domain; `lib/brand.tsx` swaps name/logo/colors |
+| Each MSP and its clients get the **current site, under their own brand** | Per-workspace data (`records` table + RLS), `lib/cloud.ts` sync; MSP public site & portal `pages/TenantSite.tsx` at `/m/<slug>`, `<slug>.omni-totalstack.com` or a custom domain; `lib/brand.tsx` swaps name/logo/colors |
 | Setup wizard & Admin set name, logo, colors, address, rates, policies → used on landing, proposals, RFS, invoices, notices | `components/SetupWizard.tsx`, Admin → Company & branding, saved to `orgs.settings` |
 | **Shut down on non-payment** | Stripe webhook → `past_due` + 7-day grace → daily cron → `suspended`; DB function `org_live()` blocks all data access; app shows lock screen; public site/portal go offline |
 | **Free account for Crystal** | `PLATFORM_OWNER_EMAILS` → complimentary Enterprise (`comped`), plus **Omni Owner Console** (`pages/OwnerConsole.tsx`) |
@@ -89,11 +89,11 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - [x] SUPABASE_SERVICE_ROLE_KEY set in Vercel.
 - [x] Stripe LIVE connected 2026-09-29 (account "Crystal Lynn Creates", dedicated secret key "Omni TotalStack"). `scripts/setup-stripe.mjs` created the 4 prices (lookup keys omni_starter_monthly / omni_unlimited_monthly / omni_business_monthly / omni_enterprise_lifetime), webhook → /api/billing/webhook, and portal config; all IDs are in Vercel env (STRIPE_PRICE_*, PLATFORM_STRIPE_*, STRIPE_PORTAL_CONFIG). Cloud sandbox can't reach api.stripe.com — run Stripe scripts on Crystal's PC.
 - [ ] Email: Gmail SMTP wired (SMTP_USER=omnitotalstack@gmail.com set); waiting on Crystal's Gmail app password → SMTP_PASS.
-- [ ] Supabase Auth → URL Configuration: Site URL https://omni-totalstack-msp.vercel.app (+ redirect URL https://omni-totalstack-msp.vercel.app/**) so password-reset links work.
+- [ ] Supabase Auth → URL Configuration: Site URL https://omni-totalstack.com (+ redirect URLs https://omni-totalstack.com/** and https://omni-totalstack-msp.vercel.app/**) so password-reset links work.
 - [x] Android package generated 2026-09-30 via PWABuilder API (package com.omnitotalstack.app, v1.4.0 / code 1) → on Crystal's PC at C:\Users\CNesm\omni-android\package (.aab, .apk, signing.keystore + signing-key-info.txt — NOT in git). ANDROID_PACKAGE + ANDROID_SHA256 (upload key 58:C5:43:…:54:31) set in Vercel.
 - [ ] Crystal: Play Console account ($25), upload .aab, then append Google's app-signing SHA-256 to ANDROID_SHA256 and set VITE_PLAY_STORE_URL once live.
 - [ ] Follow `docs/LAUNCH_CHECKLIST.md` (Supabase project, Stripe products + webhook, Resend, Vercel env vars, wildcard domain).
-- [ ] Buy the domain `omnitotalstack.com` (or pick another and set `PLATFORM_DOMAIN`).
+- [x] Domain **omni-totalstack.com** (registrar Name.com via Vercel, Vercel DNS) connected 2026-10-06: apex = production, www → 308 to apex, *.omni-totalstack.com wildcard for MSP subdomains. PUBLIC_URL / PLATFORM_DOMAIN / VITE_PLATFORM_DOMAIN set. omni-totalstack-msp.vercel.app still works (Stripe webhook + Android v1 still point there).
   - **REMINDER for Crystal when the domain is set up:** switch platform email off Gmail (omnitotalstack@gmail.com, SMTP_USER/SMTP_PASS app password, ~500/day limit) to a branded address on the domain (e.g. updates@<domain> via Resend: verify domain → RESEND_API_KEY + EMAIL_FROM_ADDRESS, then remove SMTP_USER/SMTP_PASS). Also update PUBLIC_URL, the Stripe webhook URL (re-run scripts/setup-stripe.mjs with the new PUBLIC_URL) and add the domain in Vercel.
 - [ ] Sign up with crystallynncreates@gmail.com for the free owner workspace.
 
@@ -108,6 +108,8 @@ Verified: the migration was run against Postgres 16 with a Supabase shim. RLS, s
 - See `docs/ROADMAP.md` for v1.1+.
 
 ## 5. Change log
+
+- **2026-10-06:** Connected omni-totalstack.com (apex, www redirect, wildcard subdomains); platform domain references updated.
 
 - **2026-09-30, v1.4.0:** Command Console, 14 new integrations (+ Entra user admin), Android/PWA app, owner-only Customer Guides, landing page refresh, password-reset flow, privacy policy.
 

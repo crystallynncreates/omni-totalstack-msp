@@ -6,7 +6,7 @@ Open the deployed site, click **MSP login** and sign in with any email. The setu
 ## 2. Put it online (Vercel)
 1. Sign in to vercel.com with GitHub → **Add New → Project** → import `omni-totalstack-msp`.
 2. Leave the defaults (framework: Vite) → **Deploy**. You get a live URL in about a minute.
-3. Optional: Settings → Domains → add your domain (e.g. `omnitotalstack.com`).
+3. Optional: Settings → Domains → add your domain (e.g. `omni-totalstack.com`).
 
 ## 3. Turn on the database and logins (Supabase)
 1. supabase.com → **New project**.

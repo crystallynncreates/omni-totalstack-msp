@@ -108,7 +108,7 @@ export default function Admin() {
   )
 }
 
-const DOMAIN = (import.meta.env.VITE_PLATFORM_DOMAIN as string) || 'omnitotalstack.com'
+const DOMAIN = (import.meta.env.VITE_PLATFORM_DOMAIN as string) || 'omni-totalstack.com'
 
 function WebsiteDomain() {
   const s = useStore()

@@ -5,8 +5,8 @@ Omni is a Progressive Web App (manifest `public/manifest.webmanifest`, service w
 Omni full-screen with no browser bar. Updates to the website appear in the app instantly — no new Play release needed.
 
 ## 1. Build the app package
-Generated with PWABuilder (pwabuilder.com → enter https://omni-totalstack-msp.vercel.app → Package for stores →
-Android). Settings used: package ID `com.omnitotalstack.app`, app name "Omni TotalStack MSP", launcher name "Omni MSP",
+Generated with PWABuilder (pwabuilder.com → enter the site URL → Package for stores →
+Android). v1 (Sept 30, 2026) was built for host `omni-totalstack-msp.vercel.app`; rebuild with `omni-totalstack.com` for the next version (same signing key). Settings used: package ID `com.omnitotalstack.app`, app name "Omni TotalStack MSP", launcher name "Omni MSP",
 start URL `/app?source=app`, theme `#0b0d12`, signing key: **new**.
 
 The download contains:
@@ -28,7 +28,7 @@ Redeploy after changing them. Until both are set the app still works but shows a
 2. Create app → name "Omni TotalStack MSP", App, Free.
 3. Store listing: short description, full description (see below), app icon `docs/play-store/app-icon-512.png`,
    feature graphic `docs/play-store/feature-graphic-1024x500.png`, 2+ phone screenshots (`docs/play-store/`).
-4. App content: Privacy policy URL `https://omni-totalstack-msp.vercel.app/privacy`; Ads: No; App access: provide a
+4. App content: Privacy policy URL `https://omni-totalstack.com/privacy`; Ads: No; App access: provide a
    demo login (or explain the "Explore the demo workspace" button); Data safety: see below; Target audience 18+; Category Business.
 5. Testing → Internal testing → upload the `.aab` → add your email as a tester → install from the link.
    New personal developer accounts must run a closed test with at least 12 testers for 14 days before production.

@@ -9,7 +9,7 @@ import { api } from '../lib/api'
 import { cloudEnabled } from '../lib/cloud'
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
-const DOMAIN = (import.meta.env.VITE_PLATFORM_DOMAIN as string) || 'omnitotalstack.com'
+const DOMAIN = (import.meta.env.VITE_PLATFORM_DOMAIN as string) || 'omni-totalstack.com'
 
 export default function Signup() {
   const [params] = useSearchParams()

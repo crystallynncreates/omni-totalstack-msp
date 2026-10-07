@@ -2,9 +2,9 @@
 // Creates the 4 plan prices, the billing webhook, and the customer portal, then prints the
 // values to put in Vercel: STRIPE_PRICE_*, PLATFORM_STRIPE_WEBHOOK_SECRET.
 //
-// Usage:  STRIPE_KEY=sk_live_... PUBLIC_URL=https://omni-totalstack-msp.vercel.app node scripts/setup-stripe.mjs
+// Usage:  STRIPE_KEY=sk_live_... PUBLIC_URL=https://omni-totalstack.com node scripts/setup-stripe.mjs
 const KEY = process.env.STRIPE_KEY
-const BASE = (process.env.PUBLIC_URL || 'https://omni-totalstack-msp.vercel.app').replace(/\/$/, '')
+const BASE = (process.env.PUBLIC_URL || 'https://omni-totalstack.com').replace(/\/$/, '')
 if (!KEY) { console.error('Set STRIPE_KEY first.'); process.exit(1) }
 
 async function stripe(path, params, method) {

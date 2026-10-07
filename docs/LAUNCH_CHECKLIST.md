@@ -18,13 +18,13 @@ Do these once, in order. Each step says where to click.
 4. **Settings → Billing → Automatic emails**: turn on failed-payment emails and Smart Retries.
 
 ## 3. Email (Resend), about 5 minutes
-resend.com → **Domains** → add and verify `omnitotalstack.com` → create an API key.
+resend.com → **Domains** → add and verify `omni-totalstack.com` → create an API key.
 
 ## 4. Vercel
 1. Import the GitHub repo `crystallynncreates/omni-totalstack-msp` → Deploy.
 2. **Settings → Environment Variables**: fill in everything in `.env.example`.
    `PLATFORM_OWNER_EMAILS=crystallynncreates@gmail.com` is what makes your account free.
-3. **Settings → Domains**: add `omnitotalstack.com` and the wildcard `*.omnitotalstack.com` (every MSP gets `name.omnitotalstack.com`).
+3. **Settings → Domains**: add `omni-totalstack.com` and the wildcard `*.omni-totalstack.com` (every MSP gets `name.omni-totalstack.com`).
 4. Redeploy.
 
 ## 5. Your free owner account
